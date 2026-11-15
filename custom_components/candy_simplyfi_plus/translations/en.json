@@ -1,0 +1,123 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Candy Simply-Fi Plus",
+        "description": "Enter the IP address of the Candy simply-Fi dishwasher. The encryption key is detected automatically: fill it in only if you already know it.",
+        "data": {
+          "host": "IP address",
+          "key": "Encryption key (optional)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Dishwasher not reachable: switch it on and check the IP",
+      "invalid_key": "Encrypted data: key not found or wrong",
+      "unknown": "Unexpected error, check the log"
+    },
+    "abort": {
+      "already_configured": "This dishwasher is already configured"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "stato": {
+        "name": "State",
+        "state": {
+          "off": "Off",
+          "reset": "Cancelled",
+          "idle": "Idle",
+          "ready": "Ready",
+          "delayed": "Delayed start",
+          "running": "Running",
+          "prewash": "Pre-wash",
+          "wash": "Wash",
+          "rinse": "Rinse",
+          "drying": "Drying",
+          "finished": "Finished",
+          "unknown": "Unknown"
+        }
+      },
+      "programma": {
+        "name": "Program"
+      },
+      "tempo_residuo": {
+        "name": "Remaining time"
+      },
+      "fine_ciclo": {
+        "name": "Cycle end"
+      },
+      "partenza_ritardata": {
+        "name": "Delayed start"
+      },
+      "partenza_alle": {
+        "name": "Starts at"
+      },
+      "errore": {
+        "name": "Error"
+      },
+      "dati_grezzi": {
+        "name": "Raw data"
+      },
+      "avanzamento": {
+        "name": "Progress"
+      },
+      "potenza": {
+        "name": "Power"
+      },
+      "decalcificatore": {
+        "name": "Water softener"
+      },
+      "energia_ciclo": {
+        "name": "Cycle energy"
+      }
+    },
+    "binary_sensor": {
+      "online": {
+        "name": "Online"
+      },
+      "in_funzione": {
+        "name": "Running"
+      },
+      "porta": {
+        "name": "Door"
+      },
+      "manca_sale": {
+        "name": "Salt missing"
+      },
+      "manca_brillantante": {
+        "name": "Rinse aid missing"
+      },
+      "tabs": {
+        "name": "TABS option"
+      },
+      "smart_door": {
+        "name": "Smart Door option"
+      },
+      "in_consumo": {
+        "name": "Consuming"
+      },
+      "segnali_acustici": {
+        "name": "Beeps"
+      },
+      "funzione_memo": {
+        "name": "Memo function"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Candy Simply-Fi Plus – power",
+        "description": "Optional: pick a power sensor (e.g. a Tasmota/Shelly smart plug) the dishwasher is plugged into. Candy Simply-Fi Plus will create Power and Consuming sensors, and the card will show the watts.",
+        "data": {
+          "power_entity": "Power sensor",
+          "power_threshold": "\"Consuming\" threshold"
+        },
+        "data_description": {
+          "power_threshold": "Above this value the dishwasher counts as consuming"
+        }
+      }
+    }
+  }
+}

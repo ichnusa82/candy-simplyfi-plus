@@ -1,0 +1,14 @@
+{
+  "domain": "candy_simplyfi_plus",
+  "name": "Candy Simply-Fi Plus",
+  "categories": ["appliances_cleaning"],
+  "codeowners": ["@ichnusa82"],
+  "config_flow": true,
+  "dependencies": ["http", "frontend"],
+  "documentation": "https://github.com/ichnusa82/candy-simplyfi-plus",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/ichnusa82/candy-simplyfi-plus/issues",
+  "requirements": [],
+  "version": "2.5.0"
+}

@@ -1,0 +1,123 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Candy Simply-Fi Plus",
+        "description": "Inserisci l'indirizzo IP della lavastoviglie Candy simply-Fi. La chiave di cifratura viene ricavata automaticamente: compilala solo se la conosci già.",
+        "data": {
+          "host": "Indirizzo IP",
+          "key": "Chiave di cifratura (facoltativa)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Lavastoviglie non raggiungibile: accendila e controlla l'IP",
+      "invalid_key": "Dati cifrati: chiave non trovata o errata",
+      "unknown": "Errore imprevisto, controlla il log"
+    },
+    "abort": {
+      "already_configured": "Questa lavastoviglie è già configurata"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "stato": {
+        "name": "Stato",
+        "state": {
+          "off": "Spenta",
+          "reset": "Annullato",
+          "idle": "In attesa",
+          "ready": "Pronta",
+          "delayed": "Partenza programmata",
+          "running": "In lavaggio",
+          "prewash": "Prelavaggio",
+          "wash": "Lavaggio",
+          "rinse": "Risciacquo",
+          "drying": "Asciugatura",
+          "finished": "Terminato",
+          "unknown": "Sconosciuto"
+        }
+      },
+      "programma": {
+        "name": "Programma"
+      },
+      "tempo_residuo": {
+        "name": "Tempo residuo"
+      },
+      "fine_ciclo": {
+        "name": "Fine ciclo"
+      },
+      "partenza_ritardata": {
+        "name": "Partenza ritardata"
+      },
+      "partenza_alle": {
+        "name": "Partenza alle"
+      },
+      "errore": {
+        "name": "Errore"
+      },
+      "dati_grezzi": {
+        "name": "Dati grezzi"
+      },
+      "avanzamento": {
+        "name": "Avanzamento"
+      },
+      "potenza": {
+        "name": "Potenza"
+      },
+      "decalcificatore": {
+        "name": "Decalcificatore"
+      },
+      "energia_ciclo": {
+        "name": "Energia ciclo"
+      }
+    },
+    "binary_sensor": {
+      "online": {
+        "name": "Online"
+      },
+      "in_funzione": {
+        "name": "In funzione"
+      },
+      "porta": {
+        "name": "Porta"
+      },
+      "manca_sale": {
+        "name": "Manca sale"
+      },
+      "manca_brillantante": {
+        "name": "Manca brillantante"
+      },
+      "tabs": {
+        "name": "Opzione TABS"
+      },
+      "smart_door": {
+        "name": "Opzione Smart Door"
+      },
+      "in_consumo": {
+        "name": "In consumo"
+      },
+      "segnali_acustici": {
+        "name": "Segnali acustici"
+      },
+      "funzione_memo": {
+        "name": "Funzione memo"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Candy Simply-Fi Plus – consumi",
+        "description": "Facoltativo: scegli un sensore di potenza (es. presa smart Tasmota/Shelly) a cui è collegata la lavastoviglie. Candy Simply-Fi Plus creerà i sensori Potenza e In consumo, e la card mostrerà i watt.",
+        "data": {
+          "power_entity": "Sensore di potenza",
+          "power_threshold": "Soglia \"in consumo\""
+        },
+        "data_description": {
+          "power_threshold": "Sopra questo valore la lavastoviglie è considerata in consumo"
+        }
+      }
+    }
+  }
+}
