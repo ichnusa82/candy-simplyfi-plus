@@ -8,6 +8,14 @@
           "host": "Indirizzo IP",
           "key": "Chiave di cifratura (facoltativa)"
         }
+      },
+      "reconfigure": {
+        "title": "Cambia indirizzo IP",
+        "description": "Indirizzo attuale: {host}. Inserisci il nuovo IP della lavastoviglie (accesa). Entità, statistiche e opzioni restano invariate.",
+        "data": {
+          "host": "Indirizzo IP",
+          "key": "Chiave di cifratura (facoltativa)"
+        }
       }
     },
     "error": {
@@ -16,7 +24,8 @@
       "unknown": "Errore imprevisto, controlla il log"
     },
     "abort": {
-      "already_configured": "Questa lavastoviglie è già configurata"
+      "already_configured": "Questa lavastoviglie è già configurata",
+      "reconfigure_successful": "Indirizzo aggiornato"
     }
   },
   "entity": {
@@ -34,12 +43,45 @@
           "wash": "Lavaggio",
           "rinse": "Risciacquo",
           "drying": "Asciugatura",
+          "paused": "In pausa",
           "finished": "Terminato",
           "unknown": "Sconosciuto"
+        },
+        "state_attributes": {
+          "codice": {
+            "name": "Codice"
+          },
+          "fase": {
+            "name": "Fase"
+          }
         }
       },
       "programma": {
-        "name": "Programma"
+        "name": "Programma",
+        "state_attributes": {
+          "codice": {
+            "name": "Codice"
+          },
+          "temperatura": {
+            "name": "Temperatura (°C)"
+          },
+          "durata_media_min": {
+            "name": "Durata media (min)"
+          }
+        },
+        "state": {
+          "eco": "Eco",
+          "auto": "Auto",
+          "intensive": "Intensivo",
+          "universal": "Universale",
+          "night": "Notte",
+          "delicate": "Delicato",
+          "zoom": "Zoom",
+          "rapid": "Rapido",
+          "prewash": "Prelavaggio",
+          "none": "Nessuno",
+          "other": "Altro"
+        }
       },
       "tempo_residuo": {
         "name": "Tempo residuo"
@@ -54,7 +96,20 @@
         "name": "Partenza alle"
       },
       "errore": {
-        "name": "Errore"
+        "name": "Errore",
+        "state_attributes": {
+          "codice": {
+            "name": "Codice"
+          }
+        },
+        "state": {
+          "none": "Nessun errore",
+          "no_water": "Non carica acqua",
+          "no_drain": "Non scarica l'acqua",
+          "leak": "Perdita d'acqua",
+          "heater_filter": "Resistenza o piastra filtro intasata",
+          "other": "Altro errore"
+        }
       },
       "dati_grezzi": {
         "name": "Dati grezzi"
@@ -63,13 +118,218 @@
         "name": "Avanzamento"
       },
       "potenza": {
-        "name": "Potenza"
+        "name": "Potenza",
+        "state_attributes": {
+          "sensore_sorgente": {
+            "name": "Sensore sorgente"
+          }
+        }
       },
       "decalcificatore": {
         "name": "Decalcificatore"
       },
       "energia_ciclo": {
-        "name": "Energia ciclo"
+        "name": "Energia ciclo",
+        "state_attributes": {
+          "programma": {
+            "name": "Programma",
+            "state": {
+              "eco": "Eco",
+              "auto": "Auto",
+              "intensive": "Intensivo",
+              "universal": "Universale",
+              "night": "Notte",
+              "delicate": "Delicato",
+              "zoom": "Zoom",
+              "rapid": "Rapido",
+              "prewash": "Prelavaggio",
+              "none": "Nessuno",
+              "other": "Altro"
+            }
+          },
+          "inizio": {
+            "name": "Inizio"
+          },
+          "fine": {
+            "name": "Fine"
+          },
+          "durata_min": {
+            "name": "Durata (min)"
+          },
+          "in_corso": {
+            "name": "In corso"
+          },
+          "esito": {
+            "name": "Esito",
+            "state": {
+              "completed": "Completato",
+              "cancelled": "Annullato"
+            }
+          },
+          "sensore_sorgente": {
+            "name": "Sensore sorgente"
+          }
+        }
+      },
+      "costo_ciclo": {
+        "name": "Costo ciclo",
+        "state_attributes": {
+          "programma": {
+            "name": "Programma",
+            "state": {
+              "eco": "Eco",
+              "auto": "Auto",
+              "intensive": "Intensivo",
+              "universal": "Universale",
+              "night": "Notte",
+              "delicate": "Delicato",
+              "zoom": "Zoom",
+              "rapid": "Rapido",
+              "prewash": "Prelavaggio",
+              "none": "Nessuno",
+              "other": "Altro"
+            }
+          },
+          "energia_kwh": {
+            "name": "Energia (kWh)"
+          },
+          "prezzo_attuale_kwh": {
+            "name": "Prezzo attuale per kWh"
+          },
+          "in_corso": {
+            "name": "In corso"
+          }
+        }
+      },
+      "lavaggi_totali": {
+        "name": "Lavaggi totali",
+        "state_attributes": {
+          "eco": {
+            "name": "Eco"
+          },
+          "auto": {
+            "name": "Auto"
+          },
+          "intensive": {
+            "name": "Intensivo"
+          },
+          "universal": {
+            "name": "Universale"
+          },
+          "night": {
+            "name": "Notte"
+          },
+          "delicate": {
+            "name": "Delicato"
+          },
+          "zoom": {
+            "name": "Zoom"
+          },
+          "rapid": {
+            "name": "Rapido"
+          },
+          "prewash": {
+            "name": "Prelavaggio"
+          },
+          "other": {
+            "name": "Altro"
+          }
+        }
+      },
+      "ultimo_lavaggio": {
+        "name": "Ultimo lavaggio",
+        "state_attributes": {
+          "programma": {
+            "name": "Programma",
+            "state": {
+              "eco": "Eco",
+              "auto": "Auto",
+              "intensive": "Intensivo",
+              "universal": "Universale",
+              "night": "Notte",
+              "delicate": "Delicato",
+              "zoom": "Zoom",
+              "rapid": "Rapido",
+              "prewash": "Prelavaggio",
+              "none": "Nessuno",
+              "other": "Altro"
+            }
+          },
+          "inizio": {
+            "name": "Inizio"
+          },
+          "durata_min": {
+            "name": "Durata (min)"
+          },
+          "energia_kwh": {
+            "name": "Energia (kWh)"
+          },
+          "costo": {
+            "name": "Costo"
+          },
+          "esito": {
+            "name": "Esito",
+            "state": {
+              "completed": "Completato",
+              "cancelled": "Annullato"
+            }
+          }
+        }
+      },
+      "consumo_medio": {
+        "name": "Consumo medio",
+        "state_attributes": {
+          "energia_totale_kwh": {
+            "name": "Energia totale (kWh)"
+          },
+          "costo_totale": {
+            "name": "Costo totale"
+          },
+          "lavaggi_misurati": {
+            "name": "Lavaggi misurati"
+          },
+          "eco": {
+            "name": "Eco"
+          },
+          "auto": {
+            "name": "Auto"
+          },
+          "intensive": {
+            "name": "Intensivo"
+          },
+          "universal": {
+            "name": "Universale"
+          },
+          "night": {
+            "name": "Notte"
+          },
+          "delicate": {
+            "name": "Delicato"
+          },
+          "zoom": {
+            "name": "Zoom"
+          },
+          "rapid": {
+            "name": "Rapido"
+          },
+          "prewash": {
+            "name": "Prelavaggio"
+          },
+          "other": {
+            "name": "Altro"
+          }
+        }
+      },
+      "lavaggi_filtro": {
+        "name": "Lavaggi dalla pulizia filtro",
+        "state_attributes": {
+          "ultima_pulizia": {
+            "name": "Ultima pulizia"
+          },
+          "pulizia_ogni": {
+            "name": "Pulizia ogni (lavaggi)"
+          }
+        }
       }
     },
     "binary_sensor": {
@@ -95,29 +355,58 @@
         "name": "Opzione Smart Door"
       },
       "in_consumo": {
-        "name": "In consumo"
+        "name": "In consumo",
+        "state_attributes": {
+          "sensore_sorgente": {
+            "name": "Sensore sorgente"
+          },
+          "soglia_w": {
+            "name": "Soglia (W)"
+          }
+        }
       },
       "segnali_acustici": {
         "name": "Segnali acustici"
       },
       "funzione_memo": {
         "name": "Funzione memo"
+      },
+      "pulizia_filtro": {
+        "name": "Pulizia filtro consigliata"
+      }
+    },
+    "button": {
+      "filtro_pulito": {
+        "name": "Filtro pulito"
       }
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Candy Simply-Fi Plus – consumi",
-        "description": "Facoltativo: scegli un sensore di potenza (es. presa smart Tasmota/Shelly) a cui è collegata la lavastoviglie. Candy Simply-Fi Plus creerà i sensori Potenza e In consumo, e la card mostrerà i watt.",
+        "title": "Candy Simply-Fi Plus – opzioni",
+        "description": "Consumi e costo richiedono un sensore di potenza (es. presa smart Tasmota/Shelly) a cui è collegata la lavastoviglie. Per il costo indica un prezzo fisso oppure un sensore con il prezzo attuale (se ci sono entrambi vale il sensore).",
         "data": {
           "power_entity": "Sensore di potenza",
-          "power_threshold": "Soglia \"in consumo\""
+          "power_threshold": "Soglia \"in consumo\"",
+          "energy_price": "Prezzo energia (fisso)",
+          "price_entity": "Sensore del prezzo energia",
+          "filter_every": "Pulizia filtro ogni (lavaggi)",
+          "scan_interval": "Intervallo di lettura",
+          "data_log": "Registro dati CSV"
         },
         "data_description": {
-          "power_threshold": "Sopra questo valore la lavastoviglie è considerata in consumo"
+          "power_threshold": "Sopra questo valore la lavastoviglie è considerata in consumo",
+          "energy_price": "Costo di 1 kWh, usato per il sensore Costo ciclo",
+          "price_entity": "In alternativa al prezzo fisso, ad esempio un sensore di tariffa",
+          "filter_every": "Dopo quanti lavaggi segnalare la pulizia del filtro (0 = mai)",
+          "scan_interval": "Ogni quanti secondi leggere la lavastoviglie (predefinito 30)",
+          "data_log": "Scrive candy_simplyfi_plus_registro.csv nella cartella di configurazione quando cambiano i dati"
         }
       }
+    },
+    "error": {
+      "price_needs_power": "Per calcolare il costo serve anche il sensore di potenza"
     }
   }
 }

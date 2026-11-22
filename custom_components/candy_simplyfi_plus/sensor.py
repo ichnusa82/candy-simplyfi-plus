@@ -12,11 +12,16 @@ from homeassistant.util import dt as dt_util
 from . import CandyConfigEntry
 from .const import (
     F_DELAY, F_ERROR, F_PROGRAM, F_REMAINING, F_START_STOP, F_STATE, ONLINE,
-    ERRORS, F_PHASE, F_SOFTENER, PHASES, PROGRAM_INFO, PROGRAMS, STATE_OPTIONS, STATES,
+    ERROR_OPTIONS, ERRORS, F_PHASE, F_SOFTENER, PHASES, PROGRAM_INFO, PROGRAM_OPTIONS, PROGRAMS,
+    STATE_OPTIONS, STATES,
 )
 from .const import CONF_POWER
 from .entity import CandyEntity
-from .power import CycleEnergySensor, PowerSensor
+from .power import PowerSensor
+from .tracker_entities import (
+    AverageEnergySensor, CycleCostSensor, CycleEnergySensor, FilterCountSensor,
+    LastWashSensor, WashCountSensor,
+)
 
 
 def _int(value: str | None) -> int | None:
@@ -30,8 +35,13 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: CandyConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     c = entry.runtime_data
+    tracker = c.tracker
+    stats = [WashCountSensor(c, tracker), LastWashSensor(c, tracker), FilterCountSensor(c, tracker)]
     if power := entry.options.get(CONF_POWER):
-        async_add_entities([PowerSensor(entry, power), CycleEnergySensor(c, power)])
+        stats += [PowerSensor(entry, power), CycleEnergySensor(c, tracker), AverageEnergySensor(c, tracker)]
+        if tracker.has_price:
+            stats.append(CycleCostSensor(c, tracker))
+    async_add_entities(stats)
     async_add_entities([
         StateSensor(c), ProgramSensor(c), RemainingSensor(c), EndTimeSensor(c),
         DelaySensor(c), StartTimeSensor(c), ProgressSensor(c), SoftenerSensor(c), ErrorSensor(c), RawSensor(c),
@@ -54,6 +64,8 @@ class StateSensor(CandyEntity, SensorEntity):
             return "delayed"
         if self.is_running:
             return PHASES.get(self.field(F_PHASE) or "", "running")
+        if self.coordinator.tracker is not None and self.coordinator.tracker.is_paused:
+            return "paused"
         return STATES.get(self.field(F_STATE) or "", "unknown")
 
     @property
@@ -63,6 +75,8 @@ class StateSensor(CandyEntity, SensorEntity):
 
 class ProgramSensor(CandyEntity, SensorEntity):
     _attr_icon = "mdi:format-list-numbered"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = PROGRAM_OPTIONS
 
     def __init__(self, c) -> None:
         super().__init__(c, "programma")
@@ -72,9 +86,9 @@ class ProgramSensor(CandyEntity, SensorEntity):
         if not self.online:
             return None
         code = self.field(F_PROGRAM)
-        if code == "P0":
-            return "Nessuno"
-        return PROGRAMS.get(code or "", code)
+        if code in (None, "", "P0"):
+            return "none"
+        return PROGRAMS.get(code, "other")
 
     @property
     def extra_state_attributes(self) -> dict:
@@ -215,6 +229,8 @@ class SoftenerSensor(CandyEntity, SensorEntity):
 
 class ErrorSensor(CandyEntity, SensorEntity):
     _attr_icon = "mdi:alert-circle-outline"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = ERROR_OPTIONS
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, c) -> None:
@@ -227,7 +243,7 @@ class ErrorSensor(CandyEntity, SensorEntity):
         code = self.field(F_ERROR)
         if code is None:
             return None
-        return ERRORS.get(code, f"Errore {code}")
+        return ERRORS.get(code, "other")
 
     @property
     def extra_state_attributes(self) -> dict:

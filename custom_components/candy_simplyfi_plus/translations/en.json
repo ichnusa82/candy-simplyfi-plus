@@ -8,6 +8,14 @@
           "host": "IP address",
           "key": "Encryption key (optional)"
         }
+      },
+      "reconfigure": {
+        "title": "Change IP address",
+        "description": "Current address: {host}. Enter the new IP of the dishwasher (switched on). Entities, statistics and options are kept.",
+        "data": {
+          "host": "IP address",
+          "key": "Encryption key (optional)"
+        }
       }
     },
     "error": {
@@ -16,7 +24,8 @@
       "unknown": "Unexpected error, check the log"
     },
     "abort": {
-      "already_configured": "This dishwasher is already configured"
+      "already_configured": "This dishwasher is already configured",
+      "reconfigure_successful": "Address updated"
     }
   },
   "entity": {
@@ -34,12 +43,45 @@
           "wash": "Wash",
           "rinse": "Rinse",
           "drying": "Drying",
+          "paused": "Paused",
           "finished": "Finished",
           "unknown": "Unknown"
+        },
+        "state_attributes": {
+          "codice": {
+            "name": "Code"
+          },
+          "fase": {
+            "name": "Phase"
+          }
         }
       },
       "programma": {
-        "name": "Program"
+        "name": "Program",
+        "state_attributes": {
+          "codice": {
+            "name": "Code"
+          },
+          "temperatura": {
+            "name": "Temperature (°C)"
+          },
+          "durata_media_min": {
+            "name": "Average duration (min)"
+          }
+        },
+        "state": {
+          "eco": "Eco",
+          "auto": "Auto",
+          "intensive": "Intensive",
+          "universal": "Universal",
+          "night": "Night",
+          "delicate": "Delicate",
+          "zoom": "Zoom",
+          "rapid": "Rapid",
+          "prewash": "Pre-wash",
+          "none": "None",
+          "other": "Other"
+        }
       },
       "tempo_residuo": {
         "name": "Remaining time"
@@ -54,7 +96,20 @@
         "name": "Starts at"
       },
       "errore": {
-        "name": "Error"
+        "name": "Error",
+        "state_attributes": {
+          "codice": {
+            "name": "Code"
+          }
+        },
+        "state": {
+          "none": "No error",
+          "no_water": "No water intake",
+          "no_drain": "Does not drain",
+          "leak": "Water leak",
+          "heater_filter": "Heater or clogged filter plate",
+          "other": "Other error"
+        }
       },
       "dati_grezzi": {
         "name": "Raw data"
@@ -63,13 +118,218 @@
         "name": "Progress"
       },
       "potenza": {
-        "name": "Power"
+        "name": "Power",
+        "state_attributes": {
+          "sensore_sorgente": {
+            "name": "Source sensor"
+          }
+        }
       },
       "decalcificatore": {
         "name": "Water softener"
       },
       "energia_ciclo": {
-        "name": "Cycle energy"
+        "name": "Cycle energy",
+        "state_attributes": {
+          "programma": {
+            "name": "Program",
+            "state": {
+              "eco": "Eco",
+              "auto": "Auto",
+              "intensive": "Intensive",
+              "universal": "Universal",
+              "night": "Night",
+              "delicate": "Delicate",
+              "zoom": "Zoom",
+              "rapid": "Rapid",
+              "prewash": "Pre-wash",
+              "none": "None",
+              "other": "Other"
+            }
+          },
+          "inizio": {
+            "name": "Start"
+          },
+          "fine": {
+            "name": "End"
+          },
+          "durata_min": {
+            "name": "Duration (min)"
+          },
+          "in_corso": {
+            "name": "In progress"
+          },
+          "esito": {
+            "name": "Outcome",
+            "state": {
+              "completed": "Completed",
+              "cancelled": "Cancelled"
+            }
+          },
+          "sensore_sorgente": {
+            "name": "Source sensor"
+          }
+        }
+      },
+      "costo_ciclo": {
+        "name": "Cycle cost",
+        "state_attributes": {
+          "programma": {
+            "name": "Program",
+            "state": {
+              "eco": "Eco",
+              "auto": "Auto",
+              "intensive": "Intensive",
+              "universal": "Universal",
+              "night": "Night",
+              "delicate": "Delicate",
+              "zoom": "Zoom",
+              "rapid": "Rapid",
+              "prewash": "Pre-wash",
+              "none": "None",
+              "other": "Other"
+            }
+          },
+          "energia_kwh": {
+            "name": "Energy (kWh)"
+          },
+          "prezzo_attuale_kwh": {
+            "name": "Current price per kWh"
+          },
+          "in_corso": {
+            "name": "In progress"
+          }
+        }
+      },
+      "lavaggi_totali": {
+        "name": "Total washes",
+        "state_attributes": {
+          "eco": {
+            "name": "Eco"
+          },
+          "auto": {
+            "name": "Auto"
+          },
+          "intensive": {
+            "name": "Intensive"
+          },
+          "universal": {
+            "name": "Universal"
+          },
+          "night": {
+            "name": "Night"
+          },
+          "delicate": {
+            "name": "Delicate"
+          },
+          "zoom": {
+            "name": "Zoom"
+          },
+          "rapid": {
+            "name": "Rapid"
+          },
+          "prewash": {
+            "name": "Pre-wash"
+          },
+          "other": {
+            "name": "Other"
+          }
+        }
+      },
+      "ultimo_lavaggio": {
+        "name": "Last wash",
+        "state_attributes": {
+          "programma": {
+            "name": "Program",
+            "state": {
+              "eco": "Eco",
+              "auto": "Auto",
+              "intensive": "Intensive",
+              "universal": "Universal",
+              "night": "Night",
+              "delicate": "Delicate",
+              "zoom": "Zoom",
+              "rapid": "Rapid",
+              "prewash": "Pre-wash",
+              "none": "None",
+              "other": "Other"
+            }
+          },
+          "inizio": {
+            "name": "Start"
+          },
+          "durata_min": {
+            "name": "Duration (min)"
+          },
+          "energia_kwh": {
+            "name": "Energy (kWh)"
+          },
+          "costo": {
+            "name": "Cost"
+          },
+          "esito": {
+            "name": "Outcome",
+            "state": {
+              "completed": "Completed",
+              "cancelled": "Cancelled"
+            }
+          }
+        }
+      },
+      "consumo_medio": {
+        "name": "Average consumption",
+        "state_attributes": {
+          "energia_totale_kwh": {
+            "name": "Total energy (kWh)"
+          },
+          "costo_totale": {
+            "name": "Total cost"
+          },
+          "lavaggi_misurati": {
+            "name": "Measured washes"
+          },
+          "eco": {
+            "name": "Eco"
+          },
+          "auto": {
+            "name": "Auto"
+          },
+          "intensive": {
+            "name": "Intensive"
+          },
+          "universal": {
+            "name": "Universal"
+          },
+          "night": {
+            "name": "Night"
+          },
+          "delicate": {
+            "name": "Delicate"
+          },
+          "zoom": {
+            "name": "Zoom"
+          },
+          "rapid": {
+            "name": "Rapid"
+          },
+          "prewash": {
+            "name": "Pre-wash"
+          },
+          "other": {
+            "name": "Other"
+          }
+        }
+      },
+      "lavaggi_filtro": {
+        "name": "Washes since filter cleaning",
+        "state_attributes": {
+          "ultima_pulizia": {
+            "name": "Last cleaning"
+          },
+          "pulizia_ogni": {
+            "name": "Clean every (washes)"
+          }
+        }
       }
     },
     "binary_sensor": {
@@ -95,29 +355,58 @@
         "name": "Smart Door option"
       },
       "in_consumo": {
-        "name": "Consuming"
+        "name": "Consuming",
+        "state_attributes": {
+          "sensore_sorgente": {
+            "name": "Source sensor"
+          },
+          "soglia_w": {
+            "name": "Threshold (W)"
+          }
+        }
       },
       "segnali_acustici": {
         "name": "Beeps"
       },
       "funzione_memo": {
         "name": "Memo function"
+      },
+      "pulizia_filtro": {
+        "name": "Filter cleaning due"
+      }
+    },
+    "button": {
+      "filtro_pulito": {
+        "name": "Filter cleaned"
       }
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Candy Simply-Fi Plus – power",
-        "description": "Optional: pick a power sensor (e.g. a Tasmota/Shelly smart plug) the dishwasher is plugged into. Candy Simply-Fi Plus will create Power and Consuming sensors, and the card will show the watts.",
+        "title": "Candy Simply-Fi Plus – options",
+        "description": "Consumption and cost need a power sensor (e.g. a Tasmota/Shelly smart plug) the dishwasher is plugged into. For the cost enter a fixed price or a sensor with the current price (if both are set, the sensor wins).",
         "data": {
           "power_entity": "Power sensor",
-          "power_threshold": "\"Consuming\" threshold"
+          "power_threshold": "\"Consuming\" threshold",
+          "energy_price": "Energy price (fixed)",
+          "price_entity": "Energy price sensor",
+          "filter_every": "Clean filter every (washes)",
+          "scan_interval": "Polling interval",
+          "data_log": "CSV data log"
         },
         "data_description": {
-          "power_threshold": "Above this value the dishwasher counts as consuming"
+          "power_threshold": "Above this value the dishwasher is considered consuming",
+          "energy_price": "Cost of 1 kWh, used by the Cycle cost sensor",
+          "price_entity": "Alternative to the fixed price, e.g. a tariff sensor",
+          "filter_every": "After how many washes to remind you to clean the filter (0 = never)",
+          "scan_interval": "How often to read the dishwasher, in seconds (default 30)",
+          "data_log": "Writes candy_simplyfi_plus_registro.csv in the config folder when data changes"
         }
       }
+    },
+    "error": {
+      "price_needs_power": "The cost also needs the power sensor"
     }
   }
 }

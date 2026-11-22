@@ -6,8 +6,9 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, F_DELAY, F_START_STOP, F_STATE, ONLINE
+from .const import DOMAIN, ONLINE
 from .coordinator import CandyCoordinator
+from .state import is_delayed, is_running
 
 
 def candy_device_info(entry: ConfigEntry) -> DeviceInfo:
@@ -38,20 +39,10 @@ class CandyEntity(CoordinatorEntity[CandyCoordinator]):
     def field(self, name: str) -> str | None:
         return self.coordinator.data.get(name)
 
-    def _delay(self) -> int:
-        try:
-            return int(self.field(F_DELAY) or 0)
-        except ValueError:
-            return 0
-
     @property
     def is_delayed(self) -> bool:
-        """Partenza ritardata in attesa: StatoDWash 3 con DelayStart > 0."""
-        return self.online and self.field(F_STATE) == "3" and self._delay() > 0
+        return is_delayed(self.coordinator.data)
 
     @property
     def is_running(self) -> bool:
-        """In lavaggio: StatoDWash 3 senza ritardo (StartStop resta 0 mentre lava)."""
-        if not self.online or self.is_delayed:
-            return False
-        return self.field(F_STATE) == "3" or self.field(F_START_STOP) == "1"
+        return is_running(self.coordinator.data)

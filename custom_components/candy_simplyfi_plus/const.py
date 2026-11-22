@@ -7,7 +7,15 @@ CONF_MODE = "mode"
 CONF_POWER = "power_entity"
 CONF_POWER_THRESHOLD = "power_threshold"
 DEFAULT_POWER_THRESHOLD = 5.0
-SCAN_INTERVAL = timedelta(seconds=30)
+CONF_PRICE = "energy_price"            # prezzo fisso per kWh
+CONF_PRICE_ENTITY = "price_entity"     # oppure sensore del prezzo
+CONF_FILTER_EVERY = "filter_every"     # lavaggi tra una pulizia del filtro e l'altra
+DEFAULT_FILTER_EVERY = 30
+CONF_SCAN = "scan_interval"            # secondi tra una lettura e l'altra
+DEFAULT_SCAN = 30
+CONF_LOG = "data_log"                  # registro CSV attivo
+DEFAULT_LOG = True
+SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN)
 
 ONLINE = "_online"
 
@@ -56,20 +64,28 @@ PHASES = {
 }
 STATE_OPTIONS = [
     "off", "reset", "idle", "ready", "delayed", "running", "prewash", "wash",
-    "rinse", "drying", "finished", "unknown",
+    "rinse", "drying", "paused", "finished", "unknown",
 ]
 
 # Program -> nome (verificati sul CDIMN 4D622PBE)
+# Program -> chiave del programma (nomi tradotti in translations/*.json)
 PROGRAMS = {
-    "P2": "Intensivo",
-    "P5": "Universale",
-    "P8": "Eco",
-    "P9": "Delicato",
-    "P12": "Prelavaggio",
-    "P16": "Auto",
-    "P17": "Notte",
-    "P19": "Zoom",
-    "P20": "Rapido",
+    "P2": "intensive",
+    "P5": "universal",
+    "P8": "eco",
+    "P9": "delicate",
+    "P12": "prewash",
+    "P16": "auto",
+    "P17": "night",
+    "P19": "zoom",
+    "P20": "rapid",
+}
+PROGRAM_OPTIONS = [*PROGRAMS.values(), "none", "other"]
+# nomi italiani usati fino alla 2.6.0 di sviluppo, per convertire i dati salvati
+PROGRAM_OLD_NAMES = {
+    "Intensivo": "intensive", "Universale": "universal", "Eco": "eco", "Delicato": "delicate",
+    "Prelavaggio": "prewash", "Auto": "auto", "Notte": "night", "Zoom": "zoom", "Rapido": "rapid",
+    "Sconosciuto": "other",
 }
 
 # Dal manuale: temperatura (°C) e durata media (min)
@@ -85,13 +101,13 @@ PROGRAM_INFO = {
     "P12": ("-", 5),
 }
 
-# Dal manuale: codici errore
+# Dal manuale: codici errore -> chiave (testi tradotti in translations/*.json)
 ERRORS = {
-    "E0": "Nessun errore",
-    "E2": "Non carica acqua",
-    "E3": "Non scarica l'acqua",
-    "E4": "Perdita d'acqua",
-    "E8": "Resistenza o piastra filtro intasata",
-    "Ei": "Resistenza o piastra filtro intasata",
+    "E0": "none",
+    "E2": "no_water",
+    "E3": "no_drain",
+    "E4": "leak",
+    "E8": "heater_filter",
+    "Ei": "heater_filter",
 }
-
+ERROR_OPTIONS = ["none", "no_water", "no_drain", "leak", "heater_filter", "other"]

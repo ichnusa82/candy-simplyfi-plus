@@ -1,9 +1,10 @@
-"""Coordinator: interroga la lavastoviglie ogni 30 s."""
+"""Coordinator: interroga la lavastoviglie (ogni 30 s, configurabile)."""
 from __future__ import annotations
 
 import csv
 import logging
 import os
+from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -11,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .api import CandyApi, CandyConnectionError, CandyError
-from .const import DOMAIN, ONLINE, SCAN_INTERVAL
+from .const import CONF_LOG, CONF_SCAN, DEFAULT_LOG, DEFAULT_SCAN, DOMAIN, ONLINE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,11 +29,13 @@ class CandyCoordinator(DataUpdateCoordinator[dict]):
             _LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
+            update_interval=timedelta(seconds=int(entry.options.get(CONF_SCAN, DEFAULT_SCAN))),
         )
         self.api = api
         self._last_logged: dict | None = None
         self.log_path = hass.config.path(LOG_FILE)
+        self.log_enabled = bool(entry.options.get(CONF_LOG, DEFAULT_LOG))
+        self.tracker = None  # CycleTracker, assegnato in __init__.py
 
     async def _async_update_data(self) -> dict:
         try:
@@ -46,7 +49,7 @@ class CandyCoordinator(DataUpdateCoordinator[dict]):
         else:
             data[ONLINE] = True
 
-        if data != self._last_logged:
+        if self.log_enabled and data != self._last_logged:
             self._last_logged = dict(data)
             await self.hass.async_add_executor_job(self._write_log, dict(data))
         return data

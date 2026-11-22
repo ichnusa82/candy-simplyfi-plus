@@ -13,6 +13,7 @@ from .const import (
 from .const import CONF_POWER
 from .entity import CandyEntity
 from .power import ConsumingSensor
+from .tracker_entities import FilterDueSensor
 
 # (chiave, campo JSON, device_class, icona, categoria)
 FLAGS = [
@@ -32,6 +33,7 @@ async def async_setup_entry(
     c = entry.runtime_data
     entities: list[BinarySensorEntity] = [OnlineSensor(c), RunningSensor(c)]
     entities += [FlagSensor(c, *f) for f in FLAGS]
+    entities.append(FilterDueSensor(c, c.tracker))
     if power := entry.options.get(CONF_POWER):
         entities.append(ConsumingSensor(entry, power))
     async_add_entities(entities)
@@ -57,7 +59,9 @@ class RunningSensor(CandyEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        return self.is_running
+        # resta acceso anche se si apre la porta a metà lavaggio
+        tracker = self.coordinator.tracker
+        return self.is_running or (tracker is not None and tracker.is_paused)
 
 
 class FlagSensor(CandyEntity, BinarySensorEntity):

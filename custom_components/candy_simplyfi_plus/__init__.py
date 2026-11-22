@@ -14,10 +14,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .api import CandyApi
 from .const import CONF_KEY, CONF_MODE, DOMAIN
 from .coordinator import CandyCoordinator
+from .cycle import CycleTracker
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.BUTTON]
 
 CARD_FILE = Path(__file__).parent / "frontend" / "candy-simplyfi-plus-card.js"
 CARD_URL = "/candy_simplyfi_plus/candy-simplyfi-plus-card.js"
@@ -54,7 +55,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: CandyConfigEntry) -> boo
         entry.data.get(CONF_MODE),
     )
     coordinator = CandyCoordinator(hass, entry, api)
+    tracker = CycleTracker(hass, entry, coordinator)
+    await tracker.async_load()
+    coordinator.tracker = tracker
     await coordinator.async_config_entry_first_refresh()
+    tracker.async_start()
 
     # Salva la modalità di lettura e la chiave rilevate
     if api.mode and (entry.data.get(CONF_MODE) != api.mode or entry.data.get(CONF_KEY) != api.key):
@@ -70,4 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CandyConfigEntry) -> boo
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: CandyConfigEntry) -> bool:
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unloaded and entry.runtime_data.tracker is not None:
+        await entry.runtime_data.tracker.async_stop()
+    return unloaded

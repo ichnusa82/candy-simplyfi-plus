@@ -3,42 +3,73 @@
  * Caricata automaticamente dall'integrazione: type: custom:candy-simplyfi-plus-card
  */
 
-const CARD_VERSION = "2.5.0";
+const CARD_VERSION = "2.6.0";
 
 const PROGRAMS = [
-  { code: "P8", min: 230, name: "Eco", icon: "mdi:leaf" },
-  { code: "P16", min: 95, name: "Auto", icon: "mdi:refresh-auto" },
-  { code: "P2", min: 130, name: "Intensivo", icon: "mdi:pot-steam" },
-  { code: "P5", min: 120, name: "Universale", icon: "mdi:silverware-fork-knife" },
-  { code: "P17", min: 240, name: "Notte", icon: "mdi:weather-night" },
-  { code: "P9", min: 85, name: "Delicato", icon: "mdi:glass-wine" },
-  { code: "P19", min: 39, name: "Zoom", icon: "mdi:lightning-bolt" },
-  { code: "P20", min: 24, name: "Rapido", icon: "mdi:run-fast" },
-  { code: "P12", min: 5, name: "Prelavaggio", icon: "mdi:water-outline" },
+  { code: "P8", min: 230, name: "Eco", en: "Eco", icon: "mdi:leaf" },
+  { code: "P16", min: 95, name: "Auto", en: "Auto", icon: "mdi:refresh-auto" },
+  { code: "P2", min: 130, name: "Intensivo", en: "Intensive", icon: "mdi:pot-steam" },
+  { code: "P5", min: 120, name: "Universale", en: "Universal", icon: "mdi:silverware-fork-knife" },
+  { code: "P17", min: 240, name: "Notte", en: "Night", icon: "mdi:weather-night" },
+  { code: "P9", min: 85, name: "Delicato", en: "Delicate", icon: "mdi:glass-wine" },
+  { code: "P19", min: 39, name: "Zoom", en: "Zoom", icon: "mdi:lightning-bolt" },
+  { code: "P20", min: 24, name: "Rapido", en: "Rapid", icon: "mdi:run-fast" },
+  { code: "P12", min: 5, name: "Prelavaggio", en: "Pre-wash", icon: "mdi:water-outline" },
 ];
 
 const STATES = {
-  off: { label: "Spenta", icon: "mdi:power", kind: "off" },
-  reset: { label: "Annullato", icon: "mdi:restore", kind: "idle" },
-  idle: { label: "In attesa", icon: "mdi:dishwasher", kind: "idle" },
-  ready: { label: "Pronta", icon: "mdi:dishwasher", kind: "idle" },
-  delayed: { label: "Partenza programmata", icon: "mdi:timer-sand", kind: "delayed" },
-  running: { label: "In lavaggio", icon: "mdi:dishwasher", kind: "running" },
-  prewash: { label: "Prelavaggio", icon: "mdi:water-outline", kind: "running" },
-  wash: { label: "Lavaggio", icon: "mdi:dishwasher", kind: "running" },
-  rinse: { label: "Risciacquo", icon: "mdi:water-sync", kind: "running" },
-  drying: { label: "Asciugatura", icon: "mdi:weather-sunny", kind: "running" },
-  finished: { label: "Terminato", icon: "mdi:check-circle", kind: "finished" },
-  unknown: { label: "Sconosciuto", icon: "mdi:help-circle-outline", kind: "idle" },
-  unavailable: { label: "Non disponibile", icon: "mdi:lan-disconnect", kind: "off" },
+  off: { label: "Spenta", en: "Off", icon: "mdi:power", kind: "off" },
+  reset: { label: "Annullato", en: "Cancelled", icon: "mdi:restore", kind: "idle" },
+  idle: { label: "In attesa", en: "Idle", icon: "mdi:dishwasher", kind: "idle" },
+  ready: { label: "Pronta", en: "Ready", icon: "mdi:dishwasher", kind: "idle" },
+  delayed: { label: "Partenza programmata", en: "Delayed start", icon: "mdi:timer-sand", kind: "delayed" },
+  running: { label: "In lavaggio", en: "Washing", icon: "mdi:dishwasher", kind: "running" },
+  prewash: { label: "Prelavaggio", en: "Pre-wash", icon: "mdi:water-outline", kind: "running" },
+  wash: { label: "Lavaggio", en: "Wash", icon: "mdi:dishwasher", kind: "running" },
+  rinse: { label: "Risciacquo", en: "Rinse", icon: "mdi:water-sync", kind: "running" },
+  drying: { label: "Asciugatura", en: "Drying", icon: "mdi:weather-sunny", kind: "running" },
+  paused: { label: "In pausa", en: "Paused", icon: "mdi:pause-circle", kind: "running" },
+  finished: { label: "Terminato", en: "Finished", icon: "mdi:check-circle", kind: "finished" },
+  unknown: { label: "Sconosciuto", en: "Unknown", icon: "mdi:help-circle-outline", kind: "idle" },
+  unavailable: { label: "Non disponibile", en: "Unavailable", icon: "mdi:lan-disconnect", kind: "off" },
 };
 
 // translation_key delle entità di Candy Simply-Fi Plus
 const KEYS = {
   sensor: ["stato", "programma", "tempo_residuo", "fine_ciclo", "partenza_alle",
-           "avanzamento", "errore", "potenza", "energia_ciclo", "dati_grezzi"],
+           "avanzamento", "errore", "potenza", "energia_ciclo", "costo_ciclo",
+           "lavaggi_filtro", "dati_grezzi"],
   binary_sensor: ["porta", "in_funzione", "manca_sale", "manca_brillantante",
-                  "tabs", "smart_door", "in_consumo"],
+                  "tabs", "smart_door", "in_consumo", "pulizia_filtro"],
+};
+
+// testi della card: italiano e inglese (scelti dalla lingua di Home Assistant)
+const TEXT = {
+  it: {
+    name: "Lavastoviglie", not_found: "Nessuna entità di <b>Candy Simply-Fi Plus</b> trovata. Controlla che l'integrazione sia installata.",
+    starts: "Parte alle", ends: "Fine alle", remaining: "Residuo", state: "Stato", ready_out: "Pronte da togliere",
+    duration: "Durata", door: "Porta aperta", salt: "Manca sale", rinse: "Manca brillantante", consuming: "In consumo",
+    kwh_done: "nel ciclo", kwh_now: "finora", filter: "Pulire il filtro", washes: "lavaggi", error: "Errore",
+    ed_name: "Nome", ed_programs: "Mostra programmi",
+    ed_power: "Sensore di potenza (facoltativo, sostituisce quello dell'integrazione)",
+    card_name: "Candy Simply-Fi Plus – Lavastoviglie",
+    card_desc: "Stato, programma, avanzamento e consumi della lavastoviglie Candy",
+  },
+  en: {
+    name: "Dishwasher", not_found: "No <b>Candy Simply-Fi Plus</b> entities found. Check that the integration is installed.",
+    starts: "Starts at", ends: "Ends at", remaining: "Remaining", state: "State", ready_out: "Ready to unload",
+    duration: "Duration", door: "Door open", salt: "Salt missing", rinse: "Rinse aid missing", consuming: "Consuming",
+    kwh_done: "this cycle", kwh_now: "so far", filter: "Clean the filter", washes: "washes", error: "Error",
+    ed_name: "Name", ed_programs: "Show programs",
+    ed_power: "Power sensor (optional, replaces the integration's one)",
+    card_name: "Candy Simply-Fi Plus – Dishwasher",
+    card_desc: "State, program, progress and energy of the Candy dishwasher",
+  },
+};
+const langOf = (hass) => {
+  const l = (hass && ((hass.locale && hass.locale.language) || hass.language))
+    || document.documentElement.lang || "it";
+  return String(l).toLowerCase().startsWith("it") ? "it" : "en";
 };
 
 const DEFAULT_COLORS = {
@@ -51,7 +82,7 @@ const DEFAULT_COLORS = {
 
 class CandySimplyFiPlusCard extends HTMLElement {
   static getStubConfig() {
-    return { name: "Lavastoviglie" };
+    return {};
   }
 
   static getConfigElement() {
@@ -59,7 +90,7 @@ class CandySimplyFiPlusCard extends HTMLElement {
   }
 
   setConfig(config) {
-    this._config = { name: "Lavastoviglie", show_programs: true, ...config };
+    this._config = { show_programs: true, ...config };
     this._colors = { ...DEFAULT_COLORS, ...(config.colors || {}) };
     this._sig = null;
     if (!this.shadowRoot) this.attachShadow({ mode: "open" });
@@ -118,6 +149,9 @@ class CandySimplyFiPlusCard extends HTMLElement {
     fallback("sensor", "errore", "codice_errore");
     fallback("sensor", "potenza", "potenza");
     fallback("sensor", "energia_ciclo", "energia_ciclo");
+    fallback("sensor", "costo_ciclo", "costo_ciclo");
+    fallback("sensor", "lavaggi_filtro", "lavaggi_dalla_pulizia_filtro");
+    fallback("binary_sensor", "pulizia_filtro", "pulizia_filtro_consigliata");
     fallback("binary_sensor", "porta", "porta");
     fallback("binary_sensor", "in_funzione", "in_funzione");
     fallback("binary_sensor", "manca_sale", "manca_sale");
@@ -128,6 +162,14 @@ class CandySimplyFiPlusCard extends HTMLElement {
     // sensore di potenza scelto a mano nella card
     if (cfg.power_entity) found.potenza = cfg.power_entity;
     this._ent = found;
+  }
+
+  _fmt(stateObj) {
+    // stato tradotto nella lingua di Home Assistant
+    try {
+      if (this._hass.formatEntityState) return this._hass.formatEntityState(stateObj);
+    } catch (e) { /* versioni vecchie */ }
+    return stateObj.state;
   }
 
   _st(key) {
@@ -188,10 +230,13 @@ class CandySimplyFiPlusCard extends HTMLElement {
     const c = this._colors;
     const stato = this._st("stato");
 
+    const L = langOf(this._hass);
+    const T = TEXT[L];
+    const lbl = (o) => (L === "en" && o.en ? o.en : o.label);
     if (!stato) {
       this.shadowRoot.innerHTML = `
         <ha-card><div style="padding:16px">
-          Nessuna entità di <b>Candy Simply-Fi Plus</b> trovata. Controlla che l'integrazione sia installata.
+          ${T.not_found}
         </div></ha-card>`;
       return;
     }
@@ -214,7 +259,12 @@ class CandySimplyFiPlusCard extends HTMLElement {
 
     const prog = this._st("programma");
     const progCode = prog?.attributes?.codice;
-    const progName = prog && !["unknown", "unavailable"].includes(prog.state) ? prog.state : null;
+    // il sensore restituisce una chiave (es. "intensive"): nome tradotto da Home Assistant
+    let progName = null;
+    if (prog && !["unknown", "unavailable", "none"].includes(prog.state)) {
+      const p = PROGRAMS.find((x) => x.code === progCode);
+      progName = p ? (L === "en" ? p.en : p.name) : this._fmt(prog);
+    }
     const progTemp = prog?.attributes?.temperatura;
 
     const rem = this._num(this._st("tempo_residuo"));
@@ -227,21 +277,22 @@ class CandySimplyFiPlusCard extends HTMLElement {
     const consuming = this._st("in_consumo")?.state === "on";
 
     /* riga principale: fase + orario */
-    let phaseLabel = hasError ? err.state : info.label;
+    const errText = err ? this._fmt(err) : `${T.error} ${errCode}`;
+    let phaseLabel = hasError ? errText : lbl(info);
     let phaseIcon = hasError ? "mdi:alert-circle" : info.icon;
     let right = "";
     if (kind === "off") {
       right = "";
     } else if (kind === "delayed") {
-      right = `<div class="time"><span class="cap">Parte alle</span><b>${parte || "--:--"}</b></div>
-               <div class="time"><span class="cap">Fine alle</span><b>${fine || "--:--"}</b></div>`;
+      right = `<div class="time"><span class="cap">${T.starts}</span><b>${parte || "--:--"}</b></div>
+               <div class="time"><span class="cap">${T.ends}</span><b>${fine || "--:--"}</b></div>`;
     } else if (kind === "running") {
-      right = `<div class="time"><span class="cap">Residuo</span><b>${this._hm(rem)}</b></div>
-               <div class="time"><span class="cap">Fine alle</span><b>${fine || "--:--"}</b></div>`;
+      right = `<div class="time"><span class="cap">${T.remaining}</span><b>${this._hm(rem)}</b></div>
+               <div class="time"><span class="cap">${T.ends}</span><b>${fine || "--:--"}</b></div>`;
     } else if (kind === "finished") {
-      right = `<div class="time"><span class="cap">Stato</span><b>Pronte da togliere</b></div>`;
+      right = `<div class="time"><span class="cap">${T.state}</span><b>${T.ready_out}</b></div>`;
     } else if (rem !== null) {
-      right = `<div class="time"><span class="cap">Durata</span><b>${this._hm(rem)}</b></div>`;
+      right = `<div class="time"><span class="cap">${T.duration}</span><b>${this._hm(rem)}</b></div>`;
     }
 
     /* striscia programmi */
@@ -249,8 +300,9 @@ class CandySimplyFiPlusCard extends HTMLElement {
     if (this._config.show_programs !== false && kind !== "off") {
       programs = `<div class="programs">` + PROGRAMS.map((p) => {
         const on = p.code === progCode;
-        return `<div class="prog ${on ? "sel" : ""}" title="${p.name}">
-                  <ha-icon icon="${p.icon}"></ha-icon><span>${p.name}</span>
+        const pn = L === "en" ? p.en : p.name;
+        return `<div class="prog ${on ? "sel" : ""}" title="${pn}">
+                  <ha-icon icon="${p.icon}"></ha-icon><span>${pn}</span>
                 </div>`;
       }).join("") + `</div>`;
     }
@@ -267,19 +319,35 @@ class CandySimplyFiPlusCard extends HTMLElement {
     const chip = (icon, text, color) =>
       `<span class="chip" style="--chip:${color}"><ha-icon icon="${icon}"></ha-icon>${text}</span>`;
     if (kind !== "off") {
-      if (this._st("porta")?.state === "on") chips.push(chip("mdi:door-open", "Porta aperta", c.scheduled));
-      if (this._st("manca_sale")?.state === "on") chips.push(chip("mdi:shaker-outline", "Manca sale", c.error));
-      if (this._st("manca_brillantante")?.state === "on") chips.push(chip("mdi:water-alert", "Manca brillantante", c.error));
+      if (this._st("porta")?.state === "on") chips.push(chip("mdi:door-open", T.door, c.scheduled));
+      if (this._st("manca_sale")?.state === "on") chips.push(chip("mdi:shaker-outline", T.salt, c.error));
+      if (this._st("manca_brillantante")?.state === "on") chips.push(chip("mdi:water-alert", T.rinse, c.error));
       if (this._st("tabs")?.state === "on") chips.push(chip("mdi:pill", "TABS", "var(--secondary-text-color)"));
       if (this._st("smart_door")?.state === "on") chips.push(chip("mdi:door-sliding-open", "Smart Door", "var(--secondary-text-color)"));
     }
-    if (consuming) chips.push(chip("mdi:flash", "In consumo", c.running));
+    if (consuming) chips.push(chip("mdi:flash", T.consuming, c.running));
+    const lang = (this._hass.locale && this._hass.locale.language) || "it";
     const kwh = this._num(this._st("energia_ciclo"));
     if (kwh !== null && (kind === "running" || kind === "finished")) {
-      const lang = (this._hass.locale && this._hass.locale.language) || "it";
       const txt = kwh.toLocaleString(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      chips.push(chip("mdi:lightning-bolt-circle", `${txt} kWh ${kind === "finished" ? "nel ciclo" : "finora"}`,
-        "var(--secondary-text-color)"));
+      let label = `${txt} kWh ${kind === "finished" ? T.kwh_done : T.kwh_now}`;
+      const costSt = this._st("costo_ciclo");
+      const cost = this._num(costSt);
+      if (cost !== null) {
+        const cur = costSt.attributes.unit_of_measurement || "EUR";
+        let money;
+        try {
+          money = cost.toLocaleString(lang, { style: "currency", currency: cur, minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        } catch (e) {
+          money = `${cost.toFixed(2)} ${cur}`;
+        }
+        label += ` · ${money}`;
+      }
+      chips.push(chip("mdi:lightning-bolt-circle", label, "var(--secondary-text-color)"));
+    }
+    if (this._st("pulizia_filtro")?.state === "on") {
+      const n = this._num(this._st("lavaggi_filtro"));
+      chips.push(chip("mdi:air-filter", n !== null ? `${T.filter} (${n} ${T.washes})` : T.filter, c.scheduled));
     }
 
     const power = pw !== null
@@ -340,8 +408,8 @@ class CandySimplyFiPlusCard extends HTMLElement {
         <div class="head">
           <div class="badge ${kind === "running" ? "pulse" : ""}"><ha-icon icon="mdi:dishwasher"></ha-icon></div>
           <div class="title">
-            <div class="name">${this._config.name}</div>
-            <div class="sub">${hasError ? "Errore " + errCode : info.label}${
+            <div class="name">${this._config.name || T.name}</div>
+            <div class="sub">${hasError ? T.error + " " + errCode : lbl(info)}${
               progName && kind !== "off" ? " · " + progName + (progTemp && progTemp !== "-" ? " " + progTemp + "°C" : "") : ""}</div>
           </div>
           ${power}
@@ -375,11 +443,10 @@ class CandySimplyFiPlusCardEditor extends HTMLElement {
   _render() {
     if (!this._form) {
       this._form = document.createElement("ha-form");
-      this._form.computeLabel = (s) => ({
-        name: "Nome",
-        show_programs: "Mostra programmi",
-        power_entity: "Sensore di potenza (facoltativo, sostituisce quello dell'integrazione)",
-      }[s.name] || s.name);
+      this._form.computeLabel = (s) => {
+        const T = TEXT[langOf(this._hass)];
+        return { name: T.ed_name, show_programs: T.ed_programs, power_entity: T.ed_power }[s.name] || s.name;
+      };
       this._form.schema = [
         { name: "name", selector: { text: {} } },
         { name: "show_programs", selector: { boolean: {} } },
@@ -405,8 +472,8 @@ if (!customElements.get("candy-simplyfi-plus-card")) {
   window.customCards = window.customCards || [];
   window.customCards.push({
     type: "candy-simplyfi-plus-card",
-    name: "Candy Simply-Fi Plus – Lavastoviglie",
-    description: "Stato, programma, avanzamento e consumi della lavastoviglie Candy",
+    name: TEXT[langOf()].card_name,
+    description: TEXT[langOf()].card_desc,
     preview: true,
   });
   console.info(`%c CANDY SIMPLY-FI PLUS CARD %c v${CARD_VERSION} `,

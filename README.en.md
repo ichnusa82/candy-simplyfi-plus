@@ -4,11 +4,13 @@
 
 Custom integration for **Home Assistant** that connects **Candy simply-Fi** dishwashers **over the local network**, with no cloud and no Candy account.
 
-It reads the dishwasher status every 30 seconds directly from its WiFi module and shows it in Home Assistant with ready-to-use sensors and a built-in dashboard card.
+It reads the dishwasher status every 30 seconds (adjustable) directly from its WiFi module and shows it in Home Assistant with ready-to-use sensors and a built-in dashboard card.
 
 > ⚠️ Unofficial project, not affiliated with or endorsed by Candy / Haier.
 
-![Candy Simply-Fi Plus card](images/card_stati.png)
+[![Open the repository in the Home Assistant Marketplace](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ichnusa82&repository=candy-simplyfi-plus&category=integration)
+
+![Candy Simply-Fi Plus card](images/card_states_en.png)
 
 ---
 
@@ -18,7 +20,7 @@ It reads the dishwasher status every 30 seconds directly from its WiFi module an
 |---|---|---|---|---|
 | Candy | **CDIMN 4D622PBE** (built-in dishwasher, 15 place settings) | 32901467 | Candy simply-Fi | ✅ Working |
 
-So far Candy Simply-Fi Plus has been tested **on this model only**. Other Candy simply-Fi dishwashers may work, but with different program and state codes (see [How to help](#how-to-help)).
+So far Candy Simply-Fi Plus has been tested **on this model only**. Other Candy simply-Fi dishwashers may work, but with different program and state codes (see [How to help](https://github.com/ichnusa82/candy-simplyfi-plus/blob/main/README.en.md#how-to-help)).
 
 **Not compatible:**
 - appliances using the **Haier hOn** app: they have no local API;
@@ -32,7 +34,11 @@ So far Candy Simply-Fi Plus has been tested **on this model only**. Other Candy 
 - 🔐 **Automatic encryption handling**: detects whether the dishwasher encrypts its data and recovers the key by itself
 - 📊 **Sensors**: wash state and phase, program, remaining time, end time, progress, delayed start, door, salt, rinse aid, options, errors
 - 🃏 **Built-in dashboard card**: installed automatically together with the integration
-- ⚡ **Energy**: link a power sensor (smart plug, W or kW) to get *Power*, *Consuming* and *Cycle energy* (kWh per wash)
+- ⚡ **Energy and cost**: link a power sensor (smart plug, W or kW) to get *Power*, *Consuming*, *Cycle energy* (kWh per wash) and, with the energy price, the *Cycle cost*
+- 📈 **Statistics**: total washes and per program, date of the last wash, average consumption per program
+- 🧽 **Filter maintenance**: counts washes since the last cleaning and reminds you when it's time; a button resets the counter
+- 🔧 **Change IP from the UI**: if the dishwasher gets a new address just use *Reconfigure*, keeping entities and statistics
+- 🩺 **Downloadable diagnostics**: a file with data and settings (key and IP hidden) to attach to issues
 - 📝 **Data log**: saves every change to a CSV file, useful to analyse wash cycles
 - 🇮🇹 Italian and English interface
 
@@ -49,10 +55,16 @@ So far Candy Simply-Fi Plus has been tested **on this model only**. Other Candy 
 
 ## Installation
 
-### HACS (recommended)
-1. In HACS open the **⋮ → Custom repositories** menu.
+### Marketplace / HACS (recommended)
+
+[![Open the repository in the Home Assistant Marketplace](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ichnusa82&repository=candy-simplyfi-plus&category=integration)
+
+Press the button above: your Home Assistant opens with the repository ready. Press **Install** and restart.
+
+Or manually:
+1. In **Settings → Marketplace** (or HACS before 2026.11) open the **⋮ → Custom repositories** menu.
 2. Add `https://github.com/ichnusa82/candy-simplyfi-plus` with type **Integration**.
-3. Search for **Candy Simply-Fi Plus**, download it and restart Home Assistant.
+3. Search for **Candy Simply-Fi Plus**, install it and restart Home Assistant.
 
 ### Manual
 1. Download the [latest release](https://github.com/ichnusa82/candy-simplyfi-plus/releases) and take the `custom_components/candy_simplyfi_plus` folder.
@@ -68,15 +80,27 @@ So far Candy Simply-Fi Plus has been tested **on this model only**. Other Candy 
 3. Enter the dishwasher's **IP address**.
 4. Leave the **key** field empty: if the data is encrypted, the key is recovered automatically.
 
-### Options (energy)
+### Changing the IP address
+If the dishwasher gets a new IP: **Settings → Devices & services → Candy Simply-Fi Plus → ⋮ → Reconfigure**, enter the new address (with the dishwasher switched on). Entities, statistics and options are kept.
+
+> Tip: give the dishwasher a **fixed IP** (DHCP reservation) in your router.
+
+### Options
 In **Candy Simply-Fi Plus → Configure** you can set:
 
 | Option | Description |
 |---|---|
 | Power sensor | Sensor of the smart plug the dishwasher is plugged into (W or kW) |
 | "Consuming" threshold | Value in W above which the dishwasher counts as *consuming* (default 5 W) |
+| Energy price (fixed) | Cost of 1 kWh, for the *Cycle cost* sensor |
+| Energy price sensor | Alternative to the fixed price, a sensor with the current price (per kWh); if both are set, the sensor wins |
+| Clean filter every (washes) | After how many washes to remind you to clean the filter (default 30, 0 = never) |
+| Polling interval | How often to read the dishwasher, in seconds (10–300, default 30) |
+| CSV data log | Turns the log file on or off (default on) |
 
-With a power sensor configured, **Cycle energy** resets when each wash starts, adds up the kWh used and, at the end of the cycle, keeps the total until the next wash.
+With a power sensor configured, **Cycle energy** resets when each wash starts, adds up the kWh used and, at the end of the cycle, keeps the total until the next wash. **Cycle cost** does the same in your currency, using the price valid at each moment of the wash (so it also works with time-of-use tariffs).
+
+Statistics, energy and the filter counter are stored by Home Assistant and **survive restarts**. Only washes that **reach the end of the cycle** are counted (cancelled ones are not).
 
 > Note: during the wash the pump uses very little power; with the default threshold *Consuming* turns on mainly while the dishwasher **heats the water**.
 
@@ -91,7 +115,7 @@ All entities belong to the **Lavastoviglie Candy** device. Entity names follow t
 ### Sensors
 | Entity | Description |
 |---|---|
-| State | Off, Cancelled, Idle, Ready, Delayed start, Wash, Rinse, Drying, Finished |
+| State | Off, Cancelled, Idle, Ready, Delayed start, Wash, Rinse, Drying, Paused (door opened mid-wash), Finished |
 | Program | Program name (attributes: code, temperature, average duration) |
 | Remaining time | Minutes to the end of the cycle |
 | Cycle end | Expected end time (also with delayed start) |
@@ -102,7 +126,12 @@ All entities belong to the **Lavastoviglie Candy** device. Entity names follow t
 | Water softener | Water hardness level set on the dishwasher (S0–S7) (diagnostic) |
 | Raw data | Every field read from the dishwasher, as attributes (diagnostic) |
 | Power | Only with a power sensor configured |
-| Cycle energy | kWh used by the running or last finished wash (attributes: program, start, end, duration). Only with a power sensor configured |
+| Total washes | Completed washes (attributes: number of washes per program) |
+| Last wash | Date and time the last wash ended (attributes: program, duration, energy, cost) |
+| Washes since filter cleaning | Completed washes since the filter was last cleaned (attribute: date of last cleaning) |
+| Cycle energy | kWh used by the running or last finished wash (attributes: program, start, end, duration, outcome). Only with a power sensor configured |
+| Cycle cost | Cost of the running or last finished wash. Only with a power sensor and an energy price |
+| Average consumption | Average kWh per wash (attributes: average per program, total energy and cost). Only with a power sensor configured |
 
 ### Binary sensors
 | Entity | Description |
@@ -117,8 +146,22 @@ All entities belong to the **Lavastoviglie Candy** device. Entity names follow t
 | Beeps | Acoustic signals enabled (diagnostic) |
 | Memo function | Last program memory enabled (diagnostic) |
 | Consuming | Only with a power sensor configured |
+| Filter cleaning due | Turns on when washes since the last cleaning reach the configured threshold |
+
+### Buttons
+| Entity | Description |
+|---|---|
+| Filter cleaned | Press after cleaning the filter: resets the counter (configuration) |
 
 ---
+
+### Using it in automations
+*Program*, *Error* and *State* have fixed internal values (e.g. `intensive`, `no_drain`, `finished`) that the UI shows translated. In templates, use `state_translated()` to get the text in your Home Assistant language:
+
+```yaml
+{{ state_translated('sensor.lavastoviglie_candy_programma') }}   # → Intensive
+{{ states('sensor.lavastoviglie_candy_programma') }}             # → intensive
+```
 
 ## Dashboard card
 
@@ -148,11 +191,11 @@ colors:
 
 | Dark theme | Light theme |
 |---|---|
-| ![Card states](images/card_stati.png) | ![Card in light theme](images/card_tema_chiaro.png) |
+| ![Card states](images/card_states_en.png) | ![Card in light theme](images/card_tema_chiaro.png) |
 
-*Images were generated with sample data. The card labels are in Italian.*
+*Images were generated with sample data.*
 
-The card shows state and phase, the highlighted program, remaining time and end time, an animated progress bar, power and warnings (door open, salt, rinse aid, TABS, Smart Door, errors). It follows the Home Assistant light/dark theme.
+The card shows state and phase, the highlighted program, remaining time and end time, an animated progress bar, power, cycle energy and cost, warnings (door open, salt, rinse aid, TABS, Smart Door, errors) and the filter cleaning reminder. It follows the Home Assistant light/dark theme and language (Italian or English).
 
 ---
 
@@ -164,7 +207,7 @@ Every time a value changes, Candy Simply-Fi Plus appends a line to:
 /config/candy_simplyfi_plus_registro.csv
 ```
 
-The file is rotated above 2 MB (`candy_simplyfi_plus_registro.old.csv`). It can be deleted at any time: it is recreated automatically.
+The file is rotated above 2 MB (`candy_simplyfi_plus_registro.old.csv`). It can be deleted at any time: it is recreated automatically. It can be turned off in the **options**.
 
 ---
 
@@ -238,7 +281,8 @@ Do you own another Candy simply-Fi dishwasher? You can help add it:
 
 1. Install Candy Simply-Fi Plus and run a full wash.
 2. Get the file `/config/candy_simplyfi_plus_registro.csv`.
-3. Open an [issue](https://github.com/ichnusa82/candy-simplyfi-plus/issues) with the **model** (from the rating plate on the door edge), the **program used**, and attach the file.
+3. Download the diagnostics: **Settings → Devices & services → Candy Simply-Fi Plus → ⋮ → Download diagnostics** (key and IP address are hidden).
+4. Open an [issue](https://github.com/ichnusa82/candy-simplyfi-plus/issues) with the **model** (from the rating plate on the door edge), the **program used**, and attach the files.
 
 ---
 
