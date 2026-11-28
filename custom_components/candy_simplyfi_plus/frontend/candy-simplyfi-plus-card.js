@@ -202,7 +202,7 @@ class CandySimplyFiPlusCard extends HTMLElement {
     // display: tempo residuo durante il lavaggio, "End" a fine ciclo
     const disp = kind === "running" ? (rem === null ? "--" : (rem >= 60
       ? `${Math.floor(rem / 60)}:${String(Math.round(rem) % 60).padStart(2, "0")}` : `${Math.round(rem)}'`))
-      : kind === "finished" ? "End" : kind === "delayed" ? (startAt || "--:--") : "";
+      : kind === "finished" ? "End" : kind === "delayed" ? (startAt || "--:--").replace(/\s*[AP]\.?\s?M\.?$/i, "") : "";
     const panel = `
       <rect x="4" y="4" width="72" height="17" rx="7" class="dw-panel"/>
       <rect x="4" y="13" width="72" height="8" class="dw-panel"/>
