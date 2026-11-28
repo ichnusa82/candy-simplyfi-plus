@@ -373,11 +373,49 @@
       },
       "pulizia_filtro": {
         "name": "Filter cleaning due"
+      },
+      "controllo_remoto": {
+        "name": "Remote control"
       }
     },
     "button": {
       "filtro_pulito": {
         "name": "Filter cleaned"
+      },
+      "avvia": {
+        "name": "Start"
+      },
+      "ferma": {
+        "name": "Stop"
+      }
+    },
+    "select": {
+      "programma_avvio": {
+        "name": "Program to start",
+        "state": {
+          "eco": "Eco",
+          "intensive": "Intensive",
+          "night": "Night",
+          "universal": "Universal",
+          "auto": "Auto",
+          "delicate": "Delicate",
+          "zoom": "Zoom",
+          "rapid": "Rapid",
+          "prewash": "Pre-wash"
+        }
+      }
+    },
+    "switch": {
+      "avvio_tabs": {
+        "name": "TABS on next start"
+      },
+      "avvio_smart_door": {
+        "name": "Smart Door on next start"
+      }
+    },
+    "number": {
+      "ritardo_avvio": {
+        "name": "Delayed start on next start"
       }
     }
   },
@@ -407,6 +445,14 @@
     },
     "error": {
       "price_needs_power": "The cost also needs the power sensor"
+    }
+  },
+  "exceptions": {
+    "read_only": {
+      "message": "The dishwasher refuses commands: enable remote control on its panel (Wi-Fi light steady) and try again."
+    },
+    "command_failed": {
+      "message": "Command failed: {error}"
     }
   }
 }

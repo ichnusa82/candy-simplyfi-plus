@@ -58,7 +58,11 @@ class StateSensor(CandyEntity, SensorEntity):
 
     @property
     def native_value(self) -> str:
+        tracker = self.coordinator.tracker
         if not self.online:
+            # WiFi assente per qualche minuto durante il lavaggio: resta "in lavaggio"
+            if tracker is not None and tracker.is_unreachable:
+                return "running"
             return "off"
         if self.is_delayed:
             return "delayed"

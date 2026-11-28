@@ -373,11 +373,49 @@
       },
       "pulizia_filtro": {
         "name": "Pulizia filtro consigliata"
+      },
+      "controllo_remoto": {
+        "name": "Controllo remoto"
       }
     },
     "button": {
       "filtro_pulito": {
         "name": "Filtro pulito"
+      },
+      "avvia": {
+        "name": "Avvia"
+      },
+      "ferma": {
+        "name": "Ferma"
+      }
+    },
+    "select": {
+      "programma_avvio": {
+        "name": "Programma da avviare",
+        "state": {
+          "eco": "Eco",
+          "intensive": "Intensivo",
+          "night": "Notte",
+          "universal": "Universale",
+          "auto": "Auto",
+          "delicate": "Delicato",
+          "zoom": "Zoom",
+          "rapid": "Rapido",
+          "prewash": "Prelavaggio"
+        }
+      }
+    },
+    "switch": {
+      "avvio_tabs": {
+        "name": "TABS al prossimo avvio"
+      },
+      "avvio_smart_door": {
+        "name": "Smart Door al prossimo avvio"
+      }
+    },
+    "number": {
+      "ritardo_avvio": {
+        "name": "Partenza ritardata al prossimo avvio"
       }
     }
   },
@@ -407,6 +445,14 @@
     },
     "error": {
       "price_needs_power": "Per calcolare il costo serve anche il sensore di potenza"
+    }
+  },
+  "exceptions": {
+    "read_only": {
+      "message": "La lavastoviglie rifiuta i comandi: attiva il controllo remoto dal pannello (spia Wi-Fi accesa fissa) e riprova."
+    },
+    "command_failed": {
+      "message": "Comando non riuscito: {error}"
     }
   }
 }

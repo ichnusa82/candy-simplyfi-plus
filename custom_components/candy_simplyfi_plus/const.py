@@ -52,6 +52,7 @@ STATES = {
     "3": "running",
     "4": "ready",
     "5": "finished",
+    "7": "off",       # spegnimento dopo la fine del ciclo (visto per ~1 min, poi offline)
 }
 
 # Campo r2 durante il lavaggio = fase (verificato con un ciclo Intensivo)
@@ -111,3 +112,11 @@ ERRORS = {
     "Ei": "heater_filter",
 }
 ERROR_OPTIONS = ["none", "no_water", "no_drain", "leak", "heater_filter", "other"]
+
+# ---------------------------------------------------------------------------
+# Comandi (verificati sul CDIMN 4D622PBE: avvio e Reset=1)
+# ---------------------------------------------------------------------------
+PROGRAM_ORDER = ["P8", "P2", "P17", "P5", "P16", "P9", "P19", "P20", "P12"]  # ordine del pannello
+NO_SMART_DOOR = {"P19", "P20", "P12"}   # dal manuale
+NO_TABS = {"P12"}
+MAX_DELAY_HOURS = 23.0                  # partenza ritardata: da 0:30 a 23:00, passi di 30 min

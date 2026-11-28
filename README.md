@@ -4,7 +4,7 @@
 
 Integrazione personalizzata per **Home Assistant** che collega le lavastoviglie **Candy simply-Fi** **in rete locale**, senza cloud e senza account Candy.
 
-Legge lo stato della lavastoviglie ogni 30 secondi (intervallo regolabile) direttamente dal suo modulo WiFi e lo mostra in Home Assistant con sensori pronti all'uso e una card per la dashboard già inclusa.
+Legge lo stato della lavastoviglie ogni 30 secondi (intervallo regolabile) direttamente dal suo modulo WiFi e lo mostra in Home Assistant con sensori pronti all'uso e una card per la dashboard già inclusa. Con il controllo remoto attivo sul pannello permette anche di **avviare, programmare e fermare** i lavaggi.
 
 > ⚠️ Progetto non ufficiale, non affiliato né approvato da Candy / Haier.
 
@@ -39,6 +39,7 @@ Al momento Candy Simply-Fi Plus è stata provata **solo su questo modello**. Alt
 - 🧽 **Manutenzione filtro**: conta i lavaggi dall'ultima pulizia e avvisa quando è ora di pulirlo; un pulsante azzera il contatore
 - 🔧 **Cambio IP da interfaccia**: se la lavastoviglie cambia indirizzo basta *Riconfigura*, senza perdere entità e statistiche
 - 🩺 **Diagnostica scaricabile**: un file con dati e impostazioni (chiave e IP nascosti) da allegare alle segnalazioni
+- ▶️ **Avvio e arresto da Home Assistant**: scegli programma, TABS, Smart Door e partenza ritardata e avvia la lavastoviglie (con il controllo remoto attivo sul pannello)
 - 📝 **Registro dati**: salva ogni cambiamento in un file CSV, utile per analizzare i cicli
 - 🇮🇹 Interfaccia in italiano (e inglese)
 
@@ -146,12 +147,23 @@ Tutte le entità appartengono al dispositivo **Lavastoviglie Candy**.
 | Segnali acustici | Segnali sonori attivi (diagnostica) |
 | Funzione memo | Memorizzazione dell'ultimo programma attiva (diagnostica) |
 | In consumo | Solo se configurato un sensore di potenza |
+| Controllo remoto | Acceso quando il controllo remoto è attivo sul pannello: solo così la lavastoviglie accetta i comandi |
 | Pulizia filtro consigliata | Si accende quando i lavaggi dall'ultima pulizia raggiungono la soglia impostata |
 
 ### Pulsanti
 | Entità | Descrizione |
 |---|---|
 | Filtro pulito | Da premere dopo aver pulito il filtro: azzera il contatore (configurazione) |
+| Avvia | Avvia il programma scelto con le opzioni e il ritardo impostati |
+| Ferma | Annulla il programma in corso o la partenza ritardata |
+
+### Comandi per il prossimo avvio
+| Entità | Descrizione |
+|---|---|
+| Programma da avviare | Uno dei 9 programmi del pannello |
+| TABS al prossimo avvio | Opzione detersivi combinati (non usata con il Prelavaggio) |
+| Smart Door al prossimo avvio | Apertura automatica della porta (non usata con Zoom, Rapido e Prelavaggio) |
+| Partenza ritardata al prossimo avvio | Da 0 a 23 ore, a passi di mezz'ora (0 = subito) |
 
 ### Uso nelle automazioni
 *Programma*, *Errore* e *Stato* hanno valori interni fissi in inglese (es. `intensive`, `no_drain`, `finished`), che l'interfaccia mostra tradotti. Nei template, per avere il testo nella lingua di Home Assistant, usa `state_translated()`:
@@ -160,6 +172,18 @@ Tutte le entità appartengono al dispositivo **Lavastoviglie Candy**.
 {{ state_translated('sensor.lavastoviglie_candy_programma') }}   # → Intensivo
 {{ states('sensor.lavastoviglie_candy_programma') }}             # → intensive
 ```
+
+## Avvio da remoto
+
+Per sicurezza la lavastoviglie accetta comandi **solo con il controllo remoto attivato dal pannello** (spia Wi-Fi accesa fissa): è la conferma di chi l'ha caricata e ha chiuso la porta. Senza, i pulsanti *Avvia* e *Ferma* non sono disponibili e la lavastoviglie risponde `READ ONLY`.
+
+1. Carica la lavastoviglie, chiudi la porta e attiva il **controllo remoto** dal pannello.
+2. In Home Assistant scegli **Programma da avviare**, le opzioni e l'eventuale **partenza ritardata**.
+3. Premi **Avvia**, dalla card, dal dispositivo o da un'automazione (es. per partire nella fascia oraria più economica).
+
+Dopo un comando il modulo Wi-Fi della lavastoviglie può non rispondere per 1–3 minuti: è normale, il lavaggio resta *in corso*.
+
+> Una **pausa** da remoto non è disponibile: la lavastoviglie accetta il comando ma non lo esegue.
 
 ## Card per la dashboard
 
@@ -177,6 +201,7 @@ Opzioni facoltative:
 type: custom:candy-simplyfi-plus-card
 name: Lavastoviglie          # titolo della card
 show_programs: true          # mostra la fila dei programmi
+show_dishwasher: true        # lavastoviglie stilizzata accanto ai programmi
 power_entity: sensor.xxx     # sensore di potenza diverso da quello dell'integrazione
 colors:
   active: "#2E7DD7"          # pronta
@@ -191,9 +216,11 @@ colors:
 |---|---|
 | ![Stati della card](images/card_stati.png) | ![Card con tema chiaro](images/card_tema_chiaro.png) |
 
+![Card con il controllo remoto attivo](images/card_controllo_remoto.png)
+
 *Le immagini sono state generate con dati di esempio.*
 
-La card mostra stato e fase, programma evidenziato, tempo residuo e ora di fine, barra di avanzamento animata, potenza, energia e costo del ciclo, avvisi (porta aperta, sale, brillantante, TABS, Smart Door, errori) e il promemoria di pulizia del filtro. Segue il tema chiaro/scuro e la lingua di Home Assistant (italiano o inglese).
+La card mostra stato e fase, programma evidenziato, tempo residuo e ora di fine, barra di avanzamento animata, potenza, energia e costo del ciclo, avvisi (porta aperta, sale, brillantante, TABS, Smart Door, errori) e il promemoria di pulizia del filtro. Con il controllo remoto attivo basta toccare un programma per sceglierlo, attivare o togliere **TABS** e **Smart Door**, regolare il **ritardo** con − e + (a passi di 30 minuti) e premere **Avvia** (o **Ferma** durante il lavaggio): la card chiede sempre conferma. Segue il tema chiaro/scuro e la lingua di Home Assistant (italiano o inglese).
 
 ---
 
@@ -219,8 +246,9 @@ Ricavati da prove reali e dal manuale d'uso.
 | 1 | Annullato / reset in corso (pochi secondi, `Program` = P0) |
 | 2 | Accesa, nessun programma confermato |
 | 3 | Programma avviato: in attesa se `DelayStart` > 0, altrimenti in lavaggio |
-| 4 | Programma selezionato, pronta |
+| 4 | Programma selezionato, pronta; durante un lavaggio vuol dire **pausa** (porta aperta) |
 | 5 | Ciclo terminato |
+| 7 | In spegnimento dopo la fine del ciclo (circa 1 minuto, poi il modulo WiFi si spegne) |
 
 ### Fase del lavaggio (`r2`)
 | Codice | Fase |
@@ -233,23 +261,27 @@ Ricavati da prove reali e dal manuale d'uso.
 | 5 | Fine |
 
 ### Programmi (`Program`)
-| Codice | Programma | Temperatura | Durata media |
-|---|---|---|---|
-| P8 | Eco | 45 °C | 3:52 |
-| P2 | Intensivo | 75 °C | 2:10 |
-| P17 | Notte | 55 °C | 4:00 |
-| P5 | Universale | 60 °C | 2:00 |
-| P16 | Auto | 55–65 °C | 1:35 |
-| P9 | Delicato | 45 °C | 1:25 |
-| P19 | Zoom | 60 °C | 0:39 |
-| P20 | Rapido | 50 °C | 0:24 |
-| P12 | Prelavaggio | — | 0:05 |
+| Codice | Pannello (`r1`) | Programma | Temperatura | Durata (manuale) | Durata misurata | Energia misurata |
+|---|---|---|---|---|---|---|
+| P8 | 1 | Eco | 45 °C | 3:52 | 3:52 | 0,70 kWh |
+| P2 | 2 | Intensivo | 75 °C | 2:10 | 2:27 * | 1,27 kWh |
+| P17 | 3 | Notte | 55 °C | 4:00 | — | — |
+| P5 | 4 | Universale | 60 °C | 2:00 | 2:21 * | 0,80 kWh |
+| P16 | 5 | Auto | 55–65 °C | 1:35 | 2:12–2:16 | 0,92 kWh |
+| P9 | 6 | Delicato | 45 °C | 1:25 | — | — |
+| P19 | 7 | Zoom | 60 °C | 0:39 | — | — |
+| P20 | 8 | Rapido | 50 °C | 0:24 | — | — |
+| P12 | 9 | Prelavaggio | fredda | 0:05 | 0:06 | 0,005 kWh |
+
+\* Con lo **Smart Door** attivo i programmi diversi dall'Eco durano circa **20 minuti in più**. Lo Smart Door apre la porta circa 1 ora prima della fine nell'Eco, e 2 minuti prima della fine negli altri programmi. L'Auto ricalcola la durata in base al carico.
+
+Valori misurati su un CDIMN 4D622PBE con una presa smart: possono variare con il carico e la temperatura dell'acqua.
 
 ### Altri campi
 | Campo | Significato |
 |---|---|
 | `RemTime` | Minuti residui (a fine ciclo torna alla durata del programma) |
-| `DelayStart` | Minuti alla partenza ritardata |
+| `DelayStart` | Minuti alla partenza ritardata (nei comandi si scrive invece in passi di 30 minuti: 1 = 30 min) |
 | `OpenDoor` | Porta: 1 aperta, 0 chiusa |
 | `TreinUno` | Opzione TABS |
 | `OpenDoorOpt` | Opzione Smart Door |
@@ -257,19 +289,22 @@ Ricavati da prove reali e dal manuale d'uso.
 | `CodiceErrore` | E0 nessuno, E2 non carica acqua, E3 non scarica, E4 perdita d'acqua, E8/Ei resistenza o filtro |
 | `StatoWiFi` | Controllo remoto (CONTROLLO REMOTO sul pannello): 1 attivo, 0 sola lettura |
 | `Reset` | 1 per pochi secondi dopo un annullamento (con `StatoDWash` = 1 e `Program` = P0) |
-| `r1` | Numero del programma secondo il manuale/pannello (Eco 1, Intensivo 2, Notte 3, Auto 5…) |
+| `r1` | Numero del programma sul pannello (Eco 1, Intensivo 2, Notte 3, Universale 4, Auto 5, Delicato 6, Zoom 7, Rapido 8, Prelavaggio 9) |
+| `r5` | 1 nella fase iniziale del programma (circa 30 minuti nell'Eco, 6 nell'Auto) *(significato da confermare)* |
 | `r6` | Segnali acustici: 1 attivi, 0 disattivati |
 | `r7` | Livello decalcificatore (S0–S7) |
 | `r8` | Funzione memo: 1 attiva, 0 disattivata |
-| `StartStop` | Sempre 0 su questo modello |
+| `StartStop` | 0 con i lavaggi avviati dal pannello; 1 con quelli avviati da remoto (resta 1 fino al comando successivo) |
 
 ---
 
 ## Limitazioni note
 
 - La lavastoviglie **si spegne da sola** dopo 5 minuti senza programma: in quel caso risulta *Spenta*.
-- L'integrazione **legge soltanto**: avvio e arresto da Home Assistant non sono supportati.
+- Avvio, opzioni (TABS, Smart Door), partenza ritardata e arresto da remoto sono verificati con **Prelavaggio** ed **Eco**; gli altri programmi usano lo stesso comando.
+- Una **pausa** da remoto non esiste: la lavastoviglie accetta il comando ma non lo esegue.
 - I codici di programmi e stati sono verificati **solo sul modello testato**.
+- Durante il lavaggio il modulo WiFi a volte non risponde per qualche minuto: il lavaggio resta *in corso*. Se non risponde per più di 30 minuti, il lavaggio viene considerato interrotto.
 
 ---
 
@@ -287,6 +322,7 @@ Hai un'altra lavastoviglie Candy simply-Fi? Puoi aiutare ad aggiungerla:
 ## Ringraziamenti
 
 - La community di Home Assistant per il lavoro di analisi sul protocollo Candy simply-Fi
+- Sk1zZo, per aver documentato il comando di avvio locale delle lavastoviglie Simply-Fi (proposta n. 12 su bigmoby/home-assistant-candy)
 - [ofalvai/home-assistant-candy](https://github.com/ofalvai/home-assistant-candy), integrazione che ha aperto la strada
 
 ## Note legali
@@ -299,7 +335,9 @@ Questi nomi sono citati **solo per indicare con quali apparecchi è compatibile*
 **Candy Simply-Fi Plus è un progetto indipendente e non ufficiale.** Non è sviluppato, supportato né verificato da Candy, Hoover o Haier. Per assistenza sull'apparecchio rivolgersi esclusivamente al servizio clienti ufficiale.
 
 ### Esclusione di responsabilità
-Il software è fornito **"così com'è"**, senza garanzie di alcun tipo. Funziona leggendo i dati che la lavastoviglie rende disponibili sulla rete locale; il protocollo non è documentato pubblicamente ed è stato ricostruito tramite osservazione.
+Il software è fornito **"così com'è"**, senza garanzie di alcun tipo. Funziona leggendo i dati che la lavastoviglie rende disponibili sulla rete locale e inviandole i comandi che accetta con il controllo remoto attivo; il protocollo non è documentato pubblicamente ed è stato ricostruito tramite osservazione.
+
+Chi avvia la lavastoviglie da remoto è responsabile di averla caricata correttamente e di non lasciarla in funzione in condizioni non sicure.
 
 L'autore non è responsabile per malfunzionamenti, danni all'apparecchio, perdita di garanzia o altri problemi derivanti dall'uso del software.
 

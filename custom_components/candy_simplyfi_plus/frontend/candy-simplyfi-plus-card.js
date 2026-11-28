@@ -3,18 +3,18 @@
  * Caricata automaticamente dall'integrazione: type: custom:candy-simplyfi-plus-card
  */
 
-const CARD_VERSION = "2.6.0";
+const CARD_VERSION = "2.7.0";
 
 const PROGRAMS = [
-  { code: "P8", min: 230, name: "Eco", en: "Eco", icon: "mdi:leaf" },
-  { code: "P16", min: 95, name: "Auto", en: "Auto", icon: "mdi:refresh-auto" },
-  { code: "P2", min: 130, name: "Intensivo", en: "Intensive", icon: "mdi:pot-steam" },
-  { code: "P5", min: 120, name: "Universale", en: "Universal", icon: "mdi:silverware-fork-knife" },
-  { code: "P17", min: 240, name: "Notte", en: "Night", icon: "mdi:weather-night" },
-  { code: "P9", min: 85, name: "Delicato", en: "Delicate", icon: "mdi:glass-wine" },
-  { code: "P19", min: 39, name: "Zoom", en: "Zoom", icon: "mdi:lightning-bolt" },
-  { code: "P20", min: 24, name: "Rapido", en: "Rapid", icon: "mdi:run-fast" },
-  { code: "P12", min: 5, name: "Prelavaggio", en: "Pre-wash", icon: "mdi:water-outline" },
+  { code: "P8", key: "eco", min: 230, name: "Eco", en: "Eco", icon: "mdi:leaf" },
+  { code: "P16", key: "auto", min: 95, name: "Auto", en: "Auto", icon: "mdi:refresh-auto" },
+  { code: "P2", key: "intensive", min: 130, name: "Intensivo", en: "Intensive", icon: "mdi:pot-steam" },
+  { code: "P5", key: "universal", min: 120, name: "Universale", en: "Universal", icon: "mdi:silverware-fork-knife" },
+  { code: "P17", key: "night", min: 240, name: "Notte", en: "Night", icon: "mdi:weather-night" },
+  { code: "P9", key: "delicate", min: 85, name: "Delicato", en: "Delicate", icon: "mdi:glass-wine" },
+  { code: "P19", key: "zoom", min: 39, name: "Zoom", en: "Zoom", icon: "mdi:lightning-bolt" },
+  { code: "P20", key: "rapid", min: 24, name: "Rapido", en: "Rapid", icon: "mdi:run-fast" },
+  { code: "P12", key: "prewash", min: 5, name: "Prelavaggio", en: "Pre-wash", icon: "mdi:water-outline" },
 ];
 
 const STATES = {
@@ -40,7 +40,11 @@ const KEYS = {
            "avanzamento", "errore", "potenza", "energia_ciclo", "costo_ciclo",
            "lavaggi_filtro", "dati_grezzi"],
   binary_sensor: ["porta", "in_funzione", "manca_sale", "manca_brillantante",
-                  "tabs", "smart_door", "in_consumo", "pulizia_filtro"],
+                  "tabs", "smart_door", "in_consumo", "pulizia_filtro", "controllo_remoto"],
+  select: ["programma_avvio"],
+  number: ["ritardo_avvio"],
+  switch: ["avvio_tabs", "avvio_smart_door"],
+  button: ["avvia", "ferma"],
 };
 
 // testi della card: italiano e inglese (scelti dalla lingua di Home Assistant)
@@ -50,7 +54,10 @@ const TEXT = {
     starts: "Parte alle", ends: "Fine alle", remaining: "Residuo", state: "Stato", ready_out: "Pronte da togliere",
     duration: "Durata", door: "Porta aperta", salt: "Manca sale", rinse: "Manca brillantante", consuming: "In consumo",
     kwh_done: "nel ciclo", kwh_now: "finora", filter: "Pulire il filtro", washes: "lavaggi", error: "Errore",
-    ed_name: "Nome", ed_programs: "Mostra programmi",
+    remote: "Controllo remoto", start: "Avvia", stop: "Ferma", start_in: "tra", delay: "Ritardo", now: "subito",
+    confirm_start: "Avviare {p} sulla lavastoviglie?", confirm_stop: "Annullare il programma in corso?",
+    pick: "Tocca un programma per sceglierlo",
+    ed_name: "Nome", ed_programs: "Mostra programmi", ed_dishwasher: "Mostra la lavastoviglie accanto ai programmi",
     ed_power: "Sensore di potenza (facoltativo, sostituisce quello dell'integrazione)",
     card_name: "Candy Simply-Fi Plus – Lavastoviglie",
     card_desc: "Stato, programma, avanzamento e consumi della lavastoviglie Candy",
@@ -60,7 +67,10 @@ const TEXT = {
     starts: "Starts at", ends: "Ends at", remaining: "Remaining", state: "State", ready_out: "Ready to unload",
     duration: "Duration", door: "Door open", salt: "Salt missing", rinse: "Rinse aid missing", consuming: "Consuming",
     kwh_done: "this cycle", kwh_now: "so far", filter: "Clean the filter", washes: "washes", error: "Error",
-    ed_name: "Name", ed_programs: "Show programs",
+    remote: "Remote control", start: "Start", stop: "Stop", start_in: "in", delay: "Delay", now: "now",
+    confirm_start: "Start {p} on the dishwasher?", confirm_stop: "Cancel the running program?",
+    pick: "Tap a program to choose it",
+    ed_name: "Name", ed_programs: "Show programs", ed_dishwasher: "Show the dishwasher next to the programs",
     ed_power: "Power sensor (optional, replaces the integration's one)",
     card_name: "Candy Simply-Fi Plus – Dishwasher",
     card_desc: "State, program, progress and energy of the Candy dishwasher",
@@ -187,6 +197,48 @@ class CandySimplyFiPlusCard extends HTMLElement {
       .join(";");
   }
 
+  /* ---------- lavastoviglie stilizzata ---------- */
+  _dishwasher(kind, doorOpen, rem, startAt) {
+    // display: tempo residuo durante il lavaggio, "End" a fine ciclo
+    const disp = kind === "running" ? (rem === null ? "--" : (rem >= 60
+      ? `${Math.floor(rem / 60)}:${String(Math.round(rem) % 60).padStart(2, "0")}` : `${Math.round(rem)}'`))
+      : kind === "finished" ? "End" : kind === "delayed" ? (startAt || "--:--") : "";
+    const panel = `
+      <rect x="4" y="4" width="72" height="17" rx="7" class="dw-panel"/>
+      <rect x="4" y="13" width="72" height="8" class="dw-panel"/>
+      <circle cx="13" cy="12.5" r="2.6" class="dw-led ${kind === "running" ? "blink" : ""}"/>
+      <rect x="40" y="7.5" width="31" height="10" rx="2.5" class="dw-screen"/>
+      <text x="55.5" y="15.3" class="dw-text">${disp}</text>`;
+    if (doorOpen) {
+      // porta aperta: si vedono i cestelli con i piatti
+      const plates = [16, 24, 32, 40, 48, 56, 64].map((x) =>
+        `<rect x="${x - 2}" y="58" width="4" height="17" rx="2" class="dw-dish"/>`).join("");
+      const cups = [18, 30, 42, 54].map((x) =>
+        `<path d="M${x} 36 h8 l-1 9 h-6 z" class="dw-dish"/>`).join("");
+      return `<svg viewBox="-8 0 96 112" class="dw" aria-hidden="true">
+        <rect x="4" y="4" width="72" height="84" rx="8" class="dw-body"/>
+        <rect x="9" y="24" width="62" height="62" rx="3" class="dw-inside"/>
+        ${cups}<line x1="11" y1="46" x2="69" y2="46" class="dw-rack"/>
+        ${plates}<line x1="11" y1="76" x2="69" y2="76" class="dw-rack"/>
+        ${panel}
+        <path d="M4 88 H76 L86 106 H-6 Z" class="dw-door"/>
+        <rect x="26" y="98" width="28" height="3.5" rx="1.75" class="dw-handle"/>
+      </svg>`;
+    }
+    const bubbles = kind === "running" ? [[18, 0], [26, 1.3], [34, 0.6], [42, 2.0], [50, 0.3], [58, 1.6], [64, 2.6], [30, 2.9], [46, 1.0]]
+      .map(([x, d]) => `<circle cx="${x}" cy="86" r="${2 + (x % 3) * 0.8}" class="dw-bubble" style="animation-delay:${d}s"/>`)
+      .join("") : "";
+    return `<svg viewBox="-8 0 96 112" class="dw" aria-hidden="true">
+      <defs><clipPath id="dwclip"><rect x="8" y="34" width="64" height="58" rx="4"/></clipPath></defs>
+      <rect x="4" y="4" width="72" height="100" rx="8" class="dw-body"/>
+      <rect x="8" y="34" width="64" height="58" rx="4" class="dw-front"/>
+      <g clip-path="url(#dwclip)">${bubbles}</g>
+      ${panel}
+      <rect x="22" y="26" width="36" height="4" rx="2" class="dw-handle"/>
+      <rect x="10" y="96" width="60" height="4" rx="2" class="dw-plinth"/>
+    </svg>`;
+  }
+
   /* ---------- formattazione ---------- */
   _hm(min) {
     if (min === null || min === undefined || isNaN(min)) return "--";
@@ -295,16 +347,29 @@ class CandySimplyFiPlusCard extends HTMLElement {
       right = `<div class="time"><span class="cap">${T.duration}</span><b>${this._hm(rem)}</b></div>`;
     }
 
+    /* comandi a distanza (solo con il controllo remoto attivo sul pannello) */
+    const remote = this._st("controllo_remoto")?.state === "on";
+    const nextKey = this._st("programma_avvio")?.state;
+    const canStart = remote && this._st("avvia") && !["running", "delayed"].includes(kind) && kind !== "off";
+    const canStop = remote && this._st("ferma") && ["running", "delayed"].includes(kind);
+    const nextProg = PROGRAMS.find((p) => p.key === nextKey);
+
     /* striscia programmi */
     let programs = "";
     if (this._config.show_programs !== false && kind !== "off") {
       programs = `<div class="programs">` + PROGRAMS.map((p) => {
         const on = p.code === progCode;
         const pn = L === "en" ? p.en : p.name;
-        return `<div class="prog ${on ? "sel" : ""}" title="${pn}">
+        const next = canStart && p.key === nextKey && !on;
+        return `<div class="prog ${on ? "sel" : ""} ${next ? "next" : ""} ${canStart ? "pick" : ""}"
+                     title="${pn}" ${canStart ? `data-key="${p.key}"` : ""}>
                   <ha-icon icon="${p.icon}"></ha-icon><span>${pn}</span>
                 </div>`;
       }).join("") + `</div>`;
+      if (this._config.show_dishwasher !== false) {
+        const doorOpen = this._st("porta")?.state === "on";
+        programs = `<div class="progwrap">${this._dishwasher(kind, doorOpen, rem, parte)}${programs}</div>`;
+      }
     }
 
     /* barra di avanzamento */
@@ -350,6 +415,38 @@ class CandySimplyFiPlusCard extends HTMLElement {
       chips.push(chip("mdi:air-filter", n !== null ? `${T.filter} (${n} ${T.washes})` : T.filter, c.scheduled));
     }
 
+    if (remote) chips.unshift(chip("mdi:remote", T.remote, "var(--secondary-text-color)"));
+    let actions = "";
+    if (canStart && nextProg) {
+      const delay = this._num(this._st("ritardo_avvio")) || 0;
+      const pn = L === "en" ? nextProg.en : nextProg.name;
+      // opzioni del prossimo avvio (come sul pannello: niente Smart Door su Zoom/Rapido/Prelavaggio, niente TABS sul Prelavaggio)
+      const opt = (key, label, icon, allowed) => {
+        const st = this._st(key);
+        if (!st) return "";
+        const on = st.state === "on" && allowed;
+        return `<button class="opt ${on ? "on" : ""}" ${allowed ? `data-toggle="${key}"` : "disabled"}>
+                  <ha-icon icon="${icon}"></ha-icon>${label}</button>`;
+      };
+      const opts = opt("avvio_tabs", "TABS", "mdi:pill", nextProg.code !== "P12")
+        + opt("avvio_smart_door", "Smart Door", "mdi:door-sliding-open", !["P19", "P20", "P12"].includes(nextProg.code));
+      // ritardo: − / + a passi di 30 minuti (0 = subito, massimo 23 ore)
+      const delayCtl = this._st("ritardo_avvio") ? `<span class="delay">
+          <span class="dlabel"><ha-icon icon="mdi:timer-play-outline"></ha-icon>${T.delay}</span>
+          <button class="step" data-delay="-0.5" ${delay <= 0 ? "disabled" : ""}>−</button>
+          <b>${delay > 0 ? this._hm(delay * 60) : T.now}</b>
+          <button class="step" data-delay="0.5" ${delay >= 23 ? "disabled" : ""}>+</button>
+        </span>` : "";
+      actions = `<div class="actions col">
+        <div class="ctrls"><span class="opts">${opts || `<span class="pickhint">${T.pick}</span>`}</span>${delayCtl}</div>
+        <button class="act start wide" data-act="start" data-name="${pn}">
+          <ha-icon icon="mdi:play"></ha-icon>${T.start} ${pn}${delay > 0 ? ` ${T.start_in} ${this._hm(delay * 60)}` : ""}
+        </button></div>`;
+    } else if (canStop) {
+      actions = `<div class="actions"><span class="hint"></span>
+        <button class="act stop" data-act="stop"><ha-icon icon="mdi:stop"></ha-icon>${T.stop}</button></div>`;
+    }
+
     const power = pw !== null
       ? `<div class="power ${consuming ? "on" : ""}"><ha-icon icon="mdi:flash"></ha-icon>${
           pw >= 1000 ? (pw / 1000).toFixed(2) + " kW" : Math.round(pw) + " W"}</div>`
@@ -374,9 +471,61 @@ class CandySimplyFiPlusCard extends HTMLElement {
         .programs { display: grid; grid-template-columns: repeat(auto-fit, minmax(54px, 1fr)); gap: 4px;
                     margin-top: 14px; padding: 4px; border-radius: 13px;
                     background: var(--secondary-background-color); }
+        .progwrap { display: flex; gap: 8px; align-items: center; margin-top: 14px; }
+        .progwrap .programs { flex: 1; margin-top: 0; }
+        .dw { flex: 0 0 78px; width: 78px; height: auto; }
+        .progwrap .programs { grid-template-columns: repeat(auto-fit, minmax(48px, 1fr)); }
+        .progwrap .prog span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .dw-body { fill: var(--secondary-background-color); stroke: var(--divider-color, rgba(127,127,127,.35)); stroke-width: 1.5; }
+        .dw-panel { fill: color-mix(in srgb, var(--secondary-text-color) 18%, var(--secondary-background-color)); }
+        .dw-front { fill: color-mix(in srgb, var(--accent) 16%, var(--card-background-color, #fff)); }
+        .dw-screen { fill: #1d1f24; }
+        .dw-text { fill: var(--accent); font: 700 7.5px/1 monospace; text-anchor: middle; }
+        .dw-led { fill: var(--accent); }
+        .dw-led.blink { animation: blink 1.6s ease-in-out infinite; }
+        .dw-handle { fill: color-mix(in srgb, var(--secondary-text-color) 55%, transparent); }
+        .dw-plinth { fill: color-mix(in srgb, var(--secondary-text-color) 25%, transparent); }
+        .dw-inside { fill: color-mix(in srgb, var(--secondary-text-color) 30%, var(--secondary-background-color)); }
+        .dw-rack { stroke: var(--secondary-text-color); stroke-width: 1.5; stroke-linecap: round; opacity: .7; }
+        .dw-dish { fill: var(--card-background-color, #fff); stroke: var(--secondary-text-color); stroke-width: .8; }
+        .dw-door { fill: color-mix(in srgb, var(--accent) 10%, var(--card-background-color, #fff));
+                   stroke: var(--divider-color, rgba(127,127,127,.35)); stroke-width: 1.5; stroke-linejoin: round; }
+        .dw-bubble { fill: color-mix(in srgb, var(--accent) 25%, transparent); stroke: var(--accent); stroke-width: 1.2; opacity: 0;
+                     animation: bubble 3.2s ease-in infinite; }
+        @keyframes bubble { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: .8; }
+                            100% { transform: translateY(-52px); opacity: 0; } }
+        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
         .prog { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
                 height: 45px; border-radius: 10px; color: var(--secondary-text-color); font-size: 9px; text-align: center; }
         .prog ha-icon { --mdc-icon-size: 17px; }
+        .prog.pick { cursor: pointer; }
+        .prog.pick:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+        .prog.next { outline: 1.5px dashed var(--accent); outline-offset: -2px; color: var(--accent); }
+        .actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
+        .actions .hint { font-size: 11px; color: var(--secondary-text-color); }
+        .act { display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 18px; padding: 8px 14px;
+               font-family: inherit; font-size: 13px; font-weight: 600; line-height: 1; white-space: nowrap;
+               cursor: pointer; color: #fff; background: var(--accent); }
+        .act.stop { background: var(--error-color, #db4437); }
+        .act ha-icon { --mdc-icon-size: 18px; }
+        .opt { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; margin-right: 4px; border-radius: 14px;
+               border: 1px solid var(--divider-color, rgba(127,127,127,.35)); background: transparent; cursor: pointer;
+               font-family: inherit; font-size: 12px; color: var(--secondary-text-color); white-space: nowrap; }
+        .opt.on { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+        .opt:disabled { opacity: .4; cursor: default; }
+        .opt ha-icon { --mdc-icon-size: 14px; }
+        .actions.col { flex-direction: column; align-items: stretch; gap: 10px; }
+        .ctrls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+        .opts { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+        .pickhint { font-size: 11px; color: var(--secondary-text-color); }
+        .act.wide { justify-content: center; padding: 10px 14px; }
+        .delay { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--secondary-text-color); }
+        .delay b { min-width: 46px; text-align: center; color: var(--primary-text-color); font-size: 13px; }
+        .dlabel { display: inline-flex; align-items: center; gap: 3px; }
+        .dlabel ha-icon { --mdc-icon-size: 14px; }
+        .step { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--divider-color, rgba(127,127,127,.35));
+                background: transparent; color: var(--primary-text-color); font: 600 15px/1 sans-serif; cursor: pointer; padding: 0; }
+        .step:disabled { opacity: .35; cursor: default; }
         .prog.sel { background: var(--card-background-color, #fff); color: var(--accent);
                     box-shadow: 0 1px 3px rgba(0,0,0,.15); font-weight: 600; }
         .row { display: flex; align-items: center; gap: 16px; margin-top: 14px; }
@@ -401,7 +550,7 @@ class CandySimplyFiPlusCard extends HTMLElement {
         @keyframes sweep { to { transform: translateX(100%); } }
         @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
         @media (prefers-reduced-motion: reduce) {
-          .fill.sweep::after, .badge.pulse ha-icon { animation: none; }
+          .fill.sweep::after, .badge.pulse ha-icon, .dw-bubble, .dw-led.blink { animation: none; }
         }
       </style>
       <ha-card>
@@ -422,8 +571,31 @@ class CandySimplyFiPlusCard extends HTMLElement {
         </div>`}
         ${bar}
         <div class="chips">${chips.join("")}</div>
+        ${actions}
       </ha-card>`;
 
+    this.shadowRoot.querySelectorAll("[data-key]").forEach((el) => el.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      this._hass.callService("select", "select_option", { entity_id: this._ent.programma_avvio, option: el.dataset.key });
+    }));
+    this.shadowRoot.querySelectorAll("[data-delay]").forEach((el) => el.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      const cur = this._num(this._st("ritardo_avvio")) || 0;
+      const value = Math.min(23, Math.max(0, cur + parseFloat(el.dataset.delay)));
+      this._hass.callService("number", "set_value", { entity_id: this._ent.ritardo_avvio, value });
+    }));
+    this.shadowRoot.querySelectorAll("[data-toggle]").forEach((el) => el.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      this._hass.callService("switch", "toggle", { entity_id: this._ent[el.dataset.toggle] });
+    }));
+    this.shadowRoot.querySelectorAll("[data-act]").forEach((el) => el.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      const start = el.dataset.act === "start";
+      const msg = start ? T.confirm_start.replace("{p}", el.dataset.name) : T.confirm_stop;
+      if (!window.confirm(msg)) return;
+      this._hass.callService("button", "press", { entity_id: start ? this._ent.avvia : this._ent.ferma })
+        .catch((err) => window.alert(err && err.message ? err.message : String(err)));
+    }));
     this.shadowRoot.querySelector("ha-card").addEventListener("click", () => {
       this._moreInfo(this._config.tap_entity || this._ent.stato);
     });
@@ -445,11 +617,13 @@ class CandySimplyFiPlusCardEditor extends HTMLElement {
       this._form = document.createElement("ha-form");
       this._form.computeLabel = (s) => {
         const T = TEXT[langOf(this._hass)];
-        return { name: T.ed_name, show_programs: T.ed_programs, power_entity: T.ed_power }[s.name] || s.name;
+        return { name: T.ed_name, show_programs: T.ed_programs, show_dishwasher: T.ed_dishwasher,
+                 power_entity: T.ed_power }[s.name] || s.name;
       };
       this._form.schema = [
         { name: "name", selector: { text: {} } },
         { name: "show_programs", selector: { boolean: {} } },
+        { name: "show_dishwasher", selector: { boolean: {} } },
         { name: "power_entity", selector: { entity: { domain: "sensor" } } },
       ];
       this._form.addEventListener("value-changed", (ev) => {
@@ -461,7 +635,7 @@ class CandySimplyFiPlusCardEditor extends HTMLElement {
       });
       this.appendChild(this._form);
     }
-    this._form.data = { show_programs: true, ...this._config };
+    this._form.data = { show_programs: true, show_dishwasher: true, ...this._config };
     if (this._hass) this._form.hass = this._hass;
   }
 }

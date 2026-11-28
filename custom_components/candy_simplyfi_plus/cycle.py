@@ -22,6 +22,7 @@ from .const import (
 from .state import is_finished, is_online, is_running
 
 MAX_CYCLE_HOURS = 12  # un ciclo più lungo è sicuramente rimasto aperto per errore
+MAX_OFFLINE_MIN = 30  # irraggiungibile più a lungo durante un lavaggio = lavaggio interrotto
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,6 +85,7 @@ class CycleTracker:
         self.power_entity: str | None = entry.options.get(CONF_POWER)
         self._watts: float | None = None
         self._last_ts = dt_util.utcnow()
+        self._last_online = dt_util.utcnow()
         self._listeners: list[Callable[[], None]] = []
         self._unsubs: list[Callable[[], None]] = []
 
@@ -233,6 +235,16 @@ class CycleTracker:
         cycle = self.cycle
         running = is_running(data)
         changed = False
+        now = dt_util.utcnow()
+        if is_online(data):
+            self._last_online = now
+        elif cycle["in_corso"] and (now - self._last_online).total_seconds() > MAX_OFFLINE_MIN * 60:
+            # il modulo WiFi non risponde da troppo: la lavastoviglie è stata spenta a metà
+            self._accumulate()
+            self._close_cycle(completed=False)
+            self._save()
+            self._notify()
+            return
 
         if running and cycle["in_corso"] and self._too_old():
             # ciclo rimasto aperto (es. lavastoviglie spenta a metà): lo chiude
@@ -272,6 +284,11 @@ class CycleTracker:
         if changed:
             self._save()
             self._notify()
+
+    @property
+    def is_unreachable(self) -> bool:
+        """Lavaggio in corso ma il modulo WiFi per ora non risponde (succede per pochi minuti)."""
+        return self.cycle["in_corso"] and not is_online(self.coordinator.data)
 
     @property
     def is_paused(self) -> bool:

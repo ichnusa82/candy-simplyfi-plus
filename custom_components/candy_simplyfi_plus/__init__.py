@@ -18,7 +18,10 @@ from .cycle import CycleTracker
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.BUTTON]
+PLATFORMS = [
+    Platform.SENSOR, Platform.BINARY_SENSOR, Platform.BUTTON,
+    Platform.SELECT, Platform.SWITCH, Platform.NUMBER,
+]
 
 CARD_FILE = Path(__file__).parent / "frontend" / "candy-simplyfi-plus-card.js"
 CARD_URL = "/candy_simplyfi_plus/candy-simplyfi-plus-card.js"

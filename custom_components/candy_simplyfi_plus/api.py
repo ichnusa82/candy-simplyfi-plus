@@ -6,7 +6,7 @@ import logging
 
 import aiohttp
 
-from .crypto import decrypt_hex, find_key, flatten_status, parse_json
+from .crypto import decrypt_hex, encrypt_hex, find_key, flatten_status, parse_json
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +28,10 @@ class CandyConnectionError(CandyError):
 
 class CandyKeyError(CandyError):
     """Dati cifrati e chiave non trovata / errata, o risposta non valida."""
+
+
+class CandyReadOnlyError(CandyError):
+    """La macchina rifiuta i comandi: controllo remoto non attivo sul pannello."""
 
 
 def _is_status(data: dict | None) -> bool:
@@ -64,6 +68,30 @@ class CandyApi:
                 return (await resp.read()).decode("latin-1")
         except (aiohttp.ClientError, asyncio.TimeoutError, OSError) as err:
             raise CandyConnectionError(f"{url}: {err}") from err
+
+    async def async_send_command(self, params: list[tuple[str, str]]) -> str:
+        """Invia un comando a http-write.json. Ritorna "SUCCESS" o solleva un errore."""
+        query = "&".join(f"{k}={v}" for k, v in params)
+        if self.mode == MODE_XOR and self.key:
+            path = f"http-write.json?encrypted=1&data={encrypt_hex(query, self.key)}"
+        elif self.mode == MODE_PLAIN1:
+            path = f"http-write.json?encrypted=1&{query}"
+        else:
+            path = f"http-write.json?encrypted=0&{query}"
+        reply = (await self._get(path)).strip()
+        data = parse_json(reply)
+        if data is None and self.key:
+            try:
+                data = parse_json(decrypt_hex(reply, self.key))
+            except ValueError:
+                data = None
+        response = str((data or {}).get("response", "")).upper()
+        _LOGGER.debug("Comando %s -> %s", query, response or reply)
+        if response == "READ ONLY":
+            raise CandyReadOnlyError(query)
+        if response != "SUCCESS":
+            raise CandyError(f"{query}: {response or reply}")
+        return response
 
     async def async_detect(self) -> tuple[str, str | None]:
         """Capisce come leggere la macchina. Ritorna (modalità, chiave)."""

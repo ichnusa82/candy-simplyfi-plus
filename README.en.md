@@ -4,7 +4,7 @@
 
 Custom integration for **Home Assistant** that connects **Candy simply-Fi** dishwashers **over the local network**, with no cloud and no Candy account.
 
-It reads the dishwasher status every 30 seconds (adjustable) directly from its WiFi module and shows it in Home Assistant with ready-to-use sensors and a built-in dashboard card.
+It reads the dishwasher status every 30 seconds (adjustable) directly from its WiFi module and shows it in Home Assistant with ready-to-use sensors and a built-in dashboard card. With remote control enabled on the panel it can also **start, schedule and stop** washes.
 
 > ⚠️ Unofficial project, not affiliated with or endorsed by Candy / Haier.
 
@@ -39,6 +39,7 @@ So far Candy Simply-Fi Plus has been tested **on this model only**. Other Candy 
 - 🧽 **Filter maintenance**: counts washes since the last cleaning and reminds you when it's time; a button resets the counter
 - 🔧 **Change IP from the UI**: if the dishwasher gets a new address just use *Reconfigure*, keeping entities and statistics
 - 🩺 **Downloadable diagnostics**: a file with data and settings (key and IP hidden) to attach to issues
+- ▶️ **Start and stop from Home Assistant**: choose program, TABS, Smart Door and delayed start and start the dishwasher (with remote control enabled on its panel)
 - 📝 **Data log**: saves every change to a CSV file, useful to analyse wash cycles
 - 🇮🇹 Italian and English interface
 
@@ -146,12 +147,23 @@ All entities belong to the **Lavastoviglie Candy** device. Entity names follow t
 | Beeps | Acoustic signals enabled (diagnostic) |
 | Memo function | Last program memory enabled (diagnostic) |
 | Consuming | Only with a power sensor configured |
+| Remote control | On when remote control is enabled on the panel: only then does the dishwasher accept commands |
 | Filter cleaning due | Turns on when washes since the last cleaning reach the configured threshold |
 
 ### Buttons
 | Entity | Description |
 |---|---|
 | Filter cleaned | Press after cleaning the filter: resets the counter (configuration) |
+| Start | Starts the chosen program with the options and delay set |
+| Stop | Cancels the running program or the delayed start |
+
+### Settings for the next start
+| Entity | Description |
+|---|---|
+| Program to start | One of the 9 panel programs |
+| TABS on next start | Combined detergent option (not used with Pre-wash) |
+| Smart Door on next start | Automatic door opening (not used with Zoom, Rapid and Pre-wash) |
+| Delayed start on next start | 0 to 23 hours, in half-hour steps (0 = now) |
 
 ---
 
@@ -162,6 +174,18 @@ All entities belong to the **Lavastoviglie Candy** device. Entity names follow t
 {{ state_translated('sensor.lavastoviglie_candy_programma') }}   # → Intensive
 {{ states('sensor.lavastoviglie_candy_programma') }}             # → intensive
 ```
+
+## Remote start
+
+For safety the dishwasher accepts commands **only with remote control enabled on its panel** (Wi-Fi light steady): it confirms that someone loaded it and closed the door. Without it, the *Start* and *Stop* buttons are unavailable and the dishwasher answers `READ ONLY`.
+
+1. Load the dishwasher, close the door and enable **remote control** on the panel.
+2. In Home Assistant choose the **Program to start**, the options and any **delayed start**.
+3. Press **Start**, from the card, the device page or an automation (e.g. to run in the cheapest tariff hours).
+
+After a command the dishwasher's Wi-Fi module may not answer for 1–3 minutes: this is normal, the wash stays *in progress*.
+
+> A remote **pause** is not available: the dishwasher accepts the command but does not carry it out.
 
 ## Dashboard card
 
@@ -179,6 +203,7 @@ Optional settings:
 type: custom:candy-simplyfi-plus-card
 name: Dishwasher             # card title
 show_programs: true          # show the program strip
+show_dishwasher: true        # stylised dishwasher next to the programs
 power_entity: sensor.xxx     # power sensor other than the integration's one
 colors:
   active: "#2E7DD7"          # ready
@@ -193,9 +218,11 @@ colors:
 |---|---|
 | ![Card states](images/card_states_en.png) | ![Card in light theme](images/card_tema_chiaro.png) |
 
+![Card with remote control enabled](images/card_controllo_remoto.png)
+
 *Images were generated with sample data.*
 
-The card shows state and phase, the highlighted program, remaining time and end time, an animated progress bar, power, cycle energy and cost, warnings (door open, salt, rinse aid, TABS, Smart Door, errors) and the filter cleaning reminder. It follows the Home Assistant light/dark theme and language (Italian or English).
+The card shows state and phase, the highlighted program, remaining time and end time, an animated progress bar, power, cycle energy and cost, warnings (door open, salt, rinse aid, TABS, Smart Door, errors) and the filter cleaning reminder. With remote control enabled, tap a program to choose it, switch **TABS** and **Smart Door** on or off, set the **delay** with − and + (30-minute steps) and press **Start** (or **Stop** during a wash): the card always asks for confirmation. It follows the Home Assistant light/dark theme and language (Italian or English).
 
 ---
 
@@ -221,8 +248,9 @@ Found through real tests and the user manual.
 | 1 | Cancelled / reset in progress (a few seconds, `Program` = P0) |
 | 2 | On, no program confirmed |
 | 3 | Program started: waiting if `DelayStart` > 0, otherwise washing |
-| 4 | Program selected, ready |
+| 4 | Program selected, ready; during a wash it means **paused** (door open) |
 | 5 | Cycle finished |
+| 7 | Switching off after the end of the cycle (about 1 minute, then the WiFi module goes off) |
 
 ### Wash phase (`r2`)
 | Code | Phase |
@@ -235,23 +263,27 @@ Found through real tests and the user manual.
 | 5 | End |
 
 ### Programs (`Program`)
-| Code | Program | Temperature | Average duration |
-|---|---|---|---|
-| P8 | Eco | 45 °C | 3:52 |
-| P2 | Intensive | 75 °C | 2:10 |
-| P17 | Night | 55 °C | 4:00 |
-| P5 | Universal | 60 °C | 2:00 |
-| P16 | Auto | 55–65 °C | 1:35 |
-| P9 | Delicate | 45 °C | 1:25 |
-| P19 | Zoom | 60 °C | 0:39 |
-| P20 | Rapid | 50 °C | 0:24 |
-| P12 | Pre-wash | — | 0:05 |
+| Code | Panel (`r1`) | Program | Temperature | Duration (manual) | Measured duration | Measured energy |
+|---|---|---|---|---|---|---|
+| P8 | 1 | Eco | 45 °C | 3:52 | 3:52 | 0.70 kWh |
+| P2 | 2 | Intensive | 75 °C | 2:10 | 2:27 * | 1.27 kWh |
+| P17 | 3 | Night | 55 °C | 4:00 | — | — |
+| P5 | 4 | Universal | 60 °C | 2:00 | 2:21 * | 0.80 kWh |
+| P16 | 5 | Auto | 55–65 °C | 1:35 | 2:12–2:16 | 0.92 kWh |
+| P9 | 6 | Delicate | 45 °C | 1:25 | — | — |
+| P19 | 7 | Zoom | 60 °C | 0:39 | — | — |
+| P20 | 8 | Rapid | 50 °C | 0:24 | — | — |
+| P12 | 9 | Pre-wash | cold | 0:05 | 0:06 | 0.005 kWh |
+
+\* With **Smart Door** on, programs other than Eco last about **20 minutes longer**. Smart Door opens the door about 1 hour before the end in Eco, and 2 minutes before the end in the other programs. Auto recalculates its duration based on the load.
+
+Values measured on a CDIMN 4D622PBE with a smart plug: they may vary with the load and the water temperature.
 
 ### Other fields
 | Field | Meaning |
 |---|---|
 | `RemTime` | Remaining minutes (back to the program duration at the end of the cycle) |
-| `DelayStart` | Minutes to the delayed start |
+| `DelayStart` | Minutes to the delayed start (in commands it is written in 30-minute steps instead: 1 = 30 min) |
 | `OpenDoor` | Door: 1 open, 0 closed |
 | `TreinUno` | TABS option |
 | `OpenDoorOpt` | Smart Door option |
@@ -259,19 +291,22 @@ Found through real tests and the user manual.
 | `CodiceErrore` | E0 none, E2 no water intake, E3 no drain, E4 water leak, E8/Ei heater or clogged filter |
 | `StatoWiFi` | Remote control (CONTROLLO REMOTO on the panel): 1 on, 0 read only |
 | `Reset` | 1 for a few seconds after a cancellation (with `StatoDWash` = 1 and `Program` = P0) |
-| `r1` | Program number as in the manual/panel (Eco 1, Intensive 2, Night 3, Auto 5…) |
+| `r1` | Program number on the panel (Eco 1, Intensive 2, Night 3, Universal 4, Auto 5, Delicate 6, Zoom 7, Rapid 8, Pre-wash 9) |
+| `r5` | 1 during the initial phase of the program (about 30 minutes in Eco, 6 in Auto) *(meaning to be confirmed)* |
 | `r6` | Beeps: 1 on, 0 off |
 | `r7` | Water softener level (S0–S7) |
 | `r8` | Memo function: 1 on, 0 off |
-| `StartStop` | Always 0 on this model |
+| `StartStop` | 0 for washes started on the panel; 1 for washes started remotely (stays 1 until the next command) |
 
 ---
 
 ## Known limitations
 
 - The dishwasher **switches itself off** after 5 minutes with no program: it then shows as *Off*.
-- The integration **only reads data**: starting and stopping from Home Assistant are not supported.
+- Remote start, options (TABS, Smart Door), delayed start and stop are verified with **Pre-wash** and **Eco**; the other programs use the same command.
+- A remote **pause** does not exist: the dishwasher accepts the command but does not carry it out.
 - Program and state codes are verified **on the tested model only**.
+- During a wash the WiFi module sometimes stops answering for a few minutes: the wash stays *in progress*. If it does not answer for more than 30 minutes, the wash is considered interrupted.
 
 ---
 
@@ -289,6 +324,7 @@ Do you own another Candy simply-Fi dishwasher? You can help add it:
 ## Credits
 
 - The Home Assistant community for analysing the Candy simply-Fi protocol
+- Sk1zZo, for documenting the local start command of Simply-Fi dishwashers (pull request #12 on bigmoby/home-assistant-candy)
 - [ofalvai/home-assistant-candy](https://github.com/ofalvai/home-assistant-candy), the integration that paved the way
 
 ## Legal notice
@@ -301,7 +337,9 @@ These names are used **only to indicate which appliances this software is compat
 **Candy Simply-Fi Plus is an independent, unofficial project.** It is not developed, supported or verified by Candy, Hoover or Haier. For support with the appliance, contact the official customer service only.
 
 ### Disclaimer
-The software is provided **"as is"**, without warranty of any kind. It works by reading the data the dishwasher makes available on the local network; the protocol is not publicly documented and was reconstructed by observation.
+The software is provided **"as is"**, without warranty of any kind. It works by reading the data the dishwasher makes available on the local network and by sending the commands it accepts with remote control enabled; the protocol is not publicly documented and was reconstructed by observation.
+
+Whoever starts the dishwasher remotely is responsible for having loaded it correctly and for not leaving it running in unsafe conditions.
 
 The author is not liable for malfunctions, damage to the appliance, loss of warranty or any other problem arising from the use of this software.
 

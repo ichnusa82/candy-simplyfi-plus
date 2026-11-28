@@ -36,6 +36,7 @@ class CandyCoordinator(DataUpdateCoordinator[dict]):
         self.log_path = hass.config.path(LOG_FILE)
         self.log_enabled = bool(entry.options.get(CONF_LOG, DEFAULT_LOG))
         self.tracker = None  # CycleTracker, assegnato in __init__.py
+        self.control = None  # ControlSettings, creato dalle entità di comando
 
     async def _async_update_data(self) -> dict:
         try:

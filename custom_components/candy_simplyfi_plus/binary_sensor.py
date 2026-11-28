@@ -13,6 +13,7 @@ from .const import (
 from .const import CONF_POWER
 from .entity import CandyEntity
 from .power import ConsumingSensor
+from .control import RemoteControlSensor
 from .tracker_entities import FilterDueSensor
 
 # (chiave, campo JSON, device_class, icona, categoria)
@@ -34,6 +35,7 @@ async def async_setup_entry(
     entities: list[BinarySensorEntity] = [OnlineSensor(c), RunningSensor(c)]
     entities += [FlagSensor(c, *f) for f in FLAGS]
     entities.append(FilterDueSensor(c, c.tracker))
+    entities.append(RemoteControlSensor(c))
     if power := entry.options.get(CONF_POWER):
         entities.append(ConsumingSensor(entry, power))
     async_add_entities(entities)
@@ -61,7 +63,10 @@ class RunningSensor(CandyEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         # resta acceso anche se si apre la porta a metà lavaggio
         tracker = self.coordinator.tracker
-        return self.is_running or (tracker is not None and tracker.is_paused)
+        # e anche se il modulo WiFi sparisce per qualche minuto
+        return self.is_running or (
+            tracker is not None and (tracker.is_paused or tracker.is_unreachable)
+        )
 
 
 class FlagSensor(CandyEntity, BinarySensorEntity):
