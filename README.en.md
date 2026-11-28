@@ -218,7 +218,7 @@ colors:
 |---|---|
 | ![Card states](images/card_states_en.png) | ![Card in light theme](images/card_tema_chiaro.png) |
 
-![Card with remote control enabled](images/card_controllo_remoto.png)
+![Card with remote control enabled](images/card_remote_en.png)
 
 *Images were generated with sample data.*
 
